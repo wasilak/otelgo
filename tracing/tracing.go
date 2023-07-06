@@ -14,22 +14,37 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+// The function initializes a tracer for OpenTelemetry with an exporter and sets the global trace
+// provider.
 func InitTracer(ctx context.Context) {
 
 	var err error
 	var client otlptrace.Client
 
+	// This code block is checking the value of the environment variable `OTEL_EXPORTER_OTLP_PROTOCOL`. If
+	// the value is "grpc", it creates a new gRPC client using `otlptracegrpc.NewClient()`. If the value
+	// is anything else, it creates a new HTTP client using `otlptracehttp.NewClient()`. The client is
+	// used later to initialize the exporter for OpenTelemetry tracing.
 	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == "grpc" {
 		client = otlptracegrpc.NewClient()
 	} else {
 		client = otlptracehttp.NewClient()
 	}
 
+	// The code `exporter, err := otlptrace.New(ctx, client)` is initializing an exporter for
+	// OpenTelemetry tracing. It creates a new exporter using the provided client, which can be either a
+	// gRPC client (`otlptracegrpc.Client`) or an HTTP client (`otlptracehttp.Client`) based on the value
+	// of the environment variable `OTEL_EXPORTER_OTLP_PROTOCOL`.
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
 		log.Fatalf("failed to initialize exporter: %e", err)
 	}
 
+	// The code block is initializing a resource for OpenTelemetry tracing. The `resource.New()` function
+	// is called with a context and a series of options (`resource.WithHost()`,
+	// `resource.WithContainer()`, etc.) to configure the resource. These options specify the attributes
+	// of the resource, such as the host, container, process, telemetry SDK, operating system, and
+	// environment variables.
 	res, err := resource.New(ctx,
 		resource.WithHost(),
 		resource.WithContainer(),
