@@ -14,8 +14,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-var tracer = otel.Tracer("go-hello-world")
-
 func InitTracer(ctx context.Context) {
 
 	var err error
