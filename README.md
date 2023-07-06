@@ -1,1 +1,1 @@
-# otel-go
+# otelgo
