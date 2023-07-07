@@ -15,8 +15,8 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-// The function initializes a tracer for OpenTelemetry with an exporter and sets the global trace
-// provider.
+// The `InitTracer` function initializes an exporter and a resource for OpenTelemetry tracing, and sets
+// the global trace provider and propagator.
 func InitTracer(ctx context.Context, withHostMetrics bool) {
 
 	var err error
