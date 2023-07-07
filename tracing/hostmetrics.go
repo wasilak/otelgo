@@ -34,12 +34,6 @@ func setupHostMetrics(ctx context.Context, res *resource.Resource, interval time
 	// The code block is setting up the periodic collection of host metrics using OpenTelemetry.
 	read := metric.NewPeriodicReader(exp, metric.WithInterval(interval))
 	provider := metric.NewMeterProvider(metric.WithResource(res), metric.WithReader(read))
-	defer func() {
-		err := provider.Shutdown(context.Background())
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
 
 	log.Println("Starting host instrumentation")
 
