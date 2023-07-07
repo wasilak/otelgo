@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -16,7 +17,7 @@ import (
 
 // The function initializes a tracer for OpenTelemetry with an exporter and sets the global trace
 // provider.
-func InitTracer(ctx context.Context) {
+func InitTracer(ctx context.Context, withHostMetrics bool) {
 
 	var err error
 	var client otlptrace.Client
@@ -55,6 +56,11 @@ func InitTracer(ctx context.Context) {
 	)
 	if err != nil {
 		log.Fatalf("failed to initialize resource: %e", err)
+	}
+
+	if withHostMetrics {
+		interval := 2 * time.Second
+		setupHostMetrics(ctx, res, interval)
 	}
 
 	// Create the trace provider
