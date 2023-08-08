@@ -3,9 +3,10 @@ package slog
 import (
 	"context"
 
+	"log/slog"
+
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/slog"
 )
 
 // The `const TraceIDKey = "trace_id"` line is declaring a constant variable named `TraceIDKey` with
