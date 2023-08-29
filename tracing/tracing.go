@@ -16,6 +16,9 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+// The OtelGoTracingConfig type is used to configure whether host metrics are enabled or not.
+// @property {bool} HostMetricsEnabled - A boolean value that indicates whether host metrics are
+// enabled or not.
 type OtelGoTracingConfig struct {
 	HostMetricsEnabled bool
 }
@@ -24,10 +27,12 @@ var defaultConfig = OtelGoTracingConfig{
 	HostMetricsEnabled: false,
 }
 
-// The `InitTracer` function initializes an exporter and a resource for OpenTelemetry tracing, and sets
-// the global trace provider and propagator.
+// The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
+// exporter, and resource.
 func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
 
+	// The `mergo.Merge(&defaultConfig, config)` statement is merging the values of the `config` variable
+	// into the `defaultConfig` variable.
 	mergo.Merge(&defaultConfig, config)
 
 	var err error
@@ -69,6 +74,8 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
 		log.Fatalf("failed to initialize resource: %e", err)
 	}
 
+	// The `if defaultConfig.HostMetricsEnabled` condition checks if the `HostMetricsEnabled` field in the
+	// `defaultConfig` variable is set to `true`. If it is `true`, it means that host metrics are enabled.
 	if defaultConfig.HostMetricsEnabled {
 		interval := 2 * time.Second
 		setupHostMetrics(ctx, res, interval)
