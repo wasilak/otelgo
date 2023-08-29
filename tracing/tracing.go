@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"dario.cat/mergo"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -15,9 +16,19 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+type OtelGoTracingConfig struct {
+	HostMetricsEnabled bool
+}
+
+var defaultConfig = OtelGoTracingConfig{
+	HostMetricsEnabled: false,
+}
+
 // The `InitTracer` function initializes an exporter and a resource for OpenTelemetry tracing, and sets
 // the global trace provider and propagator.
-func InitTracer(ctx context.Context, withHostMetrics bool) {
+func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
+
+	mergo.Merge(&defaultConfig, config)
 
 	var err error
 	var client otlptrace.Client
