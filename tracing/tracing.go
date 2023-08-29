@@ -2,7 +2,6 @@ package tracing
 
 import (
 	"context"
-	"log"
 	"os"
 	"time"
 
@@ -29,13 +28,15 @@ var defaultConfig = OtelGoTracingConfig{
 
 // The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
 // exporter, and resource.
-func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
+func InitTracer(ctx context.Context, config OtelGoTracingConfig) error {
 
-	// The `mergo.Merge(&defaultConfig, config)` statement is merging the values of the `config` variable
-	// into the `defaultConfig` variable.
-	mergo.Merge(&defaultConfig, config)
+	// The code `err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)` is using the `mergo`
+	// library to merge the `config` object into the `defaultConfig` object.
+	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
+	if err != nil {
+		return err
+	}
 
-	var err error
 	var client otlptrace.Client
 
 	// This code block is checking the value of the environment variable `OTEL_EXPORTER_OTLP_PROTOCOL`. If
@@ -54,7 +55,7 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
 	// of the environment variable `OTEL_EXPORTER_OTLP_PROTOCOL`.
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
-		log.Fatalf("failed to initialize exporter: %e", err)
+		return err
 	}
 
 	// The code block is initializing a resource for OpenTelemetry tracing. The `resource.New()` function
@@ -71,7 +72,7 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
 		resource.WithFromEnv(),
 	)
 	if err != nil {
-		log.Fatalf("failed to initialize resource: %e", err)
+		return err
 	}
 
 	// The `if defaultConfig.HostMetricsEnabled` condition checks if the `HostMetricsEnabled` field in the
@@ -93,4 +94,6 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
 	// Set the propagator
 	propagator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
 	otel.SetTextMapPropagator(propagator)
+
+	return nil
 }
