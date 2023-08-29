@@ -69,7 +69,7 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) {
 		log.Fatalf("failed to initialize resource: %e", err)
 	}
 
-	if withHostMetrics {
+	if defaultConfig.HostMetricsEnabled {
 		interval := 2 * time.Second
 		setupHostMetrics(ctx, res, interval)
 	}
