@@ -28,7 +28,7 @@ var defaultConfig = OtelGoTracingConfig{
 
 // The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
 // exporter, and resource.
-func InitTracer(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sdktrace.TracerProvider, error) {
+func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sdktrace.TracerProvider, error) {
 
 	// The code `err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)` is using the `mergo`
 	// library to merge the `config` object into the `defaultConfig` object.
