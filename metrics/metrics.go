@@ -26,10 +26,10 @@ var defaultConfig = OtelGoMetricsConfig{
 	},
 }
 
-func InitTracer(ctx context.Context, config OtelGoMetricsConfig) (*sdk.MeterProvider, error) {
+func InitTracer(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sdk.MeterProvider, error) {
 	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	res, err := resource.New(ctx,
@@ -42,13 +42,13 @@ func InitTracer(ctx context.Context, config OtelGoMetricsConfig) (*sdk.MeterProv
 		resource.WithAttributes(defaultConfig.Attributes...),
 	)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	// Instantiate the OTLP HTTP exporter
 	exporter, err := otlpmetrichttp.New(ctx)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	// Instantiate the OTLP HTTP exporter
@@ -59,5 +59,5 @@ func InitTracer(ctx context.Context, config OtelGoMetricsConfig) (*sdk.MeterProv
 
 	otel.SetMeterProvider(meterProvider)
 
-	return meterProvider, nil
+	return ctx, meterProvider, nil
 }

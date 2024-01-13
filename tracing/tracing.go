@@ -28,13 +28,13 @@ var defaultConfig = OtelGoTracingConfig{
 
 // The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
 // exporter, and resource.
-func InitTracer(ctx context.Context, config OtelGoTracingConfig) (*sdktrace.TracerProvider, error) {
+func InitTracer(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sdktrace.TracerProvider, error) {
 
 	// The code `err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)` is using the `mergo`
 	// library to merge the `config` object into the `defaultConfig` object.
 	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	var client otlptrace.Client
@@ -55,7 +55,7 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) (*sdktrace.Trac
 	// of the environment variable `OTEL_EXPORTER_OTLP_PROTOCOL`.
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	// The code block is initializing a resource for OpenTelemetry tracing. The `resource.New()` function
@@ -72,7 +72,7 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) (*sdktrace.Trac
 		resource.WithFromEnv(),
 	)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	// The `if defaultConfig.HostMetricsEnabled` condition checks if the `HostMetricsEnabled` field in the
@@ -95,5 +95,5 @@ func InitTracer(ctx context.Context, config OtelGoTracingConfig) (*sdktrace.Trac
 	propagator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
 	otel.SetTextMapPropagator(propagator)
 
-	return tp, nil
+	return ctx, tp, nil
 }
