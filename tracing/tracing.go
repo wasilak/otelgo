@@ -19,11 +19,17 @@ import (
 // @property {bool} HostMetricsEnabled - A boolean value that indicates whether host metrics are
 // enabled or not.
 type OtelGoTracingConfig struct {
-	HostMetricsEnabled bool
+	HostMetricsEnabled     bool
+	HostMetricsInterval    time.Duration
+	RuntimeMetricsEnabled  bool
+	RuntimeMetricsInterval time.Duration
 }
 
 var defaultConfig = OtelGoTracingConfig{
-	HostMetricsEnabled: false,
+	HostMetricsEnabled:     false,
+	RuntimeMetricsEnabled:  false,
+	HostMetricsInterval:    2 * time.Second,
+	RuntimeMetricsInterval: 2 * time.Second,
 }
 
 // The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
@@ -65,6 +71,7 @@ func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sd
 	// environment variables.
 	res, err := resource.New(ctx,
 		resource.WithHost(),
+
 		resource.WithContainer(),
 		resource.WithProcess(),
 		resource.WithTelemetrySDK(),
@@ -78,8 +85,11 @@ func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sd
 	// The `if defaultConfig.HostMetricsEnabled` condition checks if the `HostMetricsEnabled` field in the
 	// `defaultConfig` variable is set to `true`. If it is `true`, it means that host metrics are enabled.
 	if defaultConfig.HostMetricsEnabled {
-		interval := 2 * time.Second
-		setupHostMetrics(ctx, res, interval)
+		setupHostMetrics(ctx, res, defaultConfig.HostMetricsInterval.Abs())
+	}
+
+	if defaultConfig.RuntimeMetricsEnabled {
+		setupRuntimeMetrics(ctx, res, defaultConfig.RuntimeMetricsInterval)
 	}
 
 	// Create the trace provider

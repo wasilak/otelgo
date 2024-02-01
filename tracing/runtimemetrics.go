@@ -6,14 +6,14 @@ import (
 	"os"
 	"time"
 
-	"go.opentelemetry.io/contrib/instrumentation/host"
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
-func setupHostMetrics(ctx context.Context, res *resource.Resource, interval time.Duration) {
+func setupRuntimeMetrics(ctx context.Context, res *resource.Resource, interval time.Duration) {
 	var err error
 	var exp metric.Exporter
 
@@ -29,7 +29,7 @@ func setupHostMetrics(ctx context.Context, res *resource.Resource, interval time
 	read := metric.NewPeriodicReader(exp, metric.WithInterval(interval))
 	provider := metric.NewMeterProvider(metric.WithResource(res), metric.WithReader(read))
 
-	err = host.Start(host.WithMeterProvider(provider))
+	err = runtime.Start(runtime.WithMeterProvider(provider))
 	if err != nil {
 		log.Fatal(err)
 	}
