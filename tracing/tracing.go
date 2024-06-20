@@ -19,10 +19,10 @@ import (
 // @property {bool} HostMetricsEnabled - A boolean value that indicates whether host metrics are
 // enabled or not.
 type OtelGoTracingConfig struct {
-	HostMetricsEnabled     bool
-	HostMetricsInterval    time.Duration
-	RuntimeMetricsEnabled  bool
-	RuntimeMetricsInterval time.Duration
+	HostMetricsEnabled     bool          `json:"host_metrics_enabled"`     // HostMetricsEnabled specifies whether host metrics are enabled. Default is false.
+	HostMetricsInterval    time.Duration `json:"host_metrics_interval"`    // HostMetricsInterval specifies the interval at which host metrics are collected. Default is 2 seconds.
+	RuntimeMetricsEnabled  bool          `json:"runtime_metrics_enabled"`  // RuntimeMetricsEnabled specifies whether runtime metrics are enabled. Default is false.
+	RuntimeMetricsInterval time.Duration `json:"runtime_metrics_interval"` // RuntimeMetricsInterval specifies the interval at which runtime metrics are collected. Default is 2 seconds.
 }
 
 var defaultConfig = OtelGoTracingConfig{

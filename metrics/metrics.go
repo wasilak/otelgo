@@ -14,10 +14,8 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
-// var requestCount metric.Int64Counter
-
 type OtelGoMetricsConfig struct {
-	Attributes []attribute.KeyValue
+	Attributes []attribute.KeyValue `json:"attributes"` // Attributes specifies the attributes to be added to the metric resource. Default is an empty slice.
 }
 
 var defaultConfig = OtelGoMetricsConfig{
