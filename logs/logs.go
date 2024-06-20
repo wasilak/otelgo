@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/log/global"
 	sdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
 )
 
 type OtelGoLogsConfig struct {
