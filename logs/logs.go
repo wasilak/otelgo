@@ -2,7 +2,6 @@ package logs
 
 import (
 	"context"
-	"log"
 	"os"
 
 	"dario.cat/mergo"
@@ -67,11 +66,11 @@ func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.L
 	)
 
 	// Handle shutdown properly so nothing leaks.
-	defer func() {
-		if err := logProvider.Shutdown(ctx); err != nil {
-			log.Fatalln(err)
-		}
-	}()
+	// defer func() {
+	// 	if err := logProvider.Shutdown(ctx); err != nil {
+	// 		log.Fatalln(err)
+	// 	}
+	// }()
 
 	global.SetLoggerProvider(logProvider)
 
