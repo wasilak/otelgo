@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	sdk "go.opentelemetry.io/otel/sdk/trace"
 )
 
 // The OtelGoTracingConfig type is used to configure whether host metrics are enabled or not.
@@ -34,7 +34,7 @@ var defaultConfig = OtelGoTracingConfig{
 
 // The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
 // exporter, and resource.
-func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sdktrace.TracerProvider, error) {
+func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sdk.TracerProvider, error) {
 
 	// The code `err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)` is using the `mergo`
 	// library to merge the `config` object into the `defaultConfig` object.
@@ -93,9 +93,9 @@ func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sd
 	}
 
 	// Create the trace provider
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(res),
+	tp := sdk.NewTracerProvider(
+		sdk.WithBatcher(exporter),
+		sdk.WithResource(res),
 	)
 
 	// Set the global trace provider

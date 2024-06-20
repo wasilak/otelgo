@@ -1,33 +1,34 @@
-package metrics
+package logs
 
 import (
 	"context"
+	"log"
 	"os"
 
 	"dario.cat/mergo"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-	sdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
+	"go.opentelemetry.io/otel/log/global"
+	sdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
 // var requestCount metric.Int64Counter
 
-type OtelGoMetricsConfig struct {
+type OtelGoLogsConfig struct {
 	Attributes []attribute.KeyValue
 }
 
-var defaultConfig = OtelGoMetricsConfig{
+var defaultConfig = OtelGoLogsConfig{
 	Attributes: []attribute.KeyValue{
 		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
 		semconv.ServiceVersionKey.String("v0.0.0"),
 	},
 }
 
-func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sdk.MeterProvider, error) {
+func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.LoggerProvider, error) {
 	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
 	if err != nil {
 		return ctx, nil, err
@@ -49,30 +50,32 @@ func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sd
 	var exporter sdk.Exporter
 
 	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == "grpc" {
-		exporter, err = otlpmetricgrpc.New(ctx)
+		exporter, err = otlploggrpc.New(ctx)
 		if err != nil {
 			return ctx, nil, err
 		}
 	} else {
-		exporter, err = otlpmetrichttp.New(ctx)
+		exporter, err = otlploghttp.New(ctx)
 		if err != nil {
 			return ctx, nil, err
 		}
 	}
 
-	meterProvider := sdk.NewMeterProvider(
+	processor := sdk.NewBatchProcessor(exporter)
+
+	logProvider := sdk.NewLoggerProvider(
 		sdk.WithResource(res),
-		sdk.WithReader(sdk.NewPeriodicReader(exporter)),
+		sdk.WithProcessor(processor),
 	)
 
-	// defer func() {
-	// 	err := meterProvider.Shutdown(context.Background())
-	// 	if err != nil {
-	// 		log.Fatalln(err)
-	// 	}
-	// }()
+	// Handle shutdown properly so nothing leaks.
+	defer func() {
+		if err := logProvider.Shutdown(ctx); err != nil {
+			log.Fatalln(err)
+		}
+	}()
 
-	otel.SetMeterProvider(meterProvider)
+	global.SetLoggerProvider(logProvider)
 
-	return ctx, meterProvider, nil
+	return ctx, logProvider, nil
 }
