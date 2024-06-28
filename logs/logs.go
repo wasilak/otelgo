@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"dario.cat/mergo"
+	"github.com/wasilak/otelgo/common"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
@@ -46,7 +47,7 @@ func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.L
 
 	var exporter sdk.Exporter
 
-	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == "grpc" {
+	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL") {
 		exporter, err = otlploggrpc.New(ctx)
 		if err != nil {
 			return ctx, nil, err
