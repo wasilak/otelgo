@@ -45,7 +45,7 @@ func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sd
 
 	var client otlptrace.Client
 
-	if common.CheckOtlpProtocol("traces", "grpc") {
+	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL") {
 		client = otlptracegrpc.NewClient()
 	} else {
 		client = otlptracehttp.NewClient()

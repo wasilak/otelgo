@@ -17,7 +17,7 @@ func setupHostMetrics(ctx context.Context, res *resource.Resource, interval time
 	var err error
 	var exp metric.Exporter
 
-	if common.CheckOtlpProtocol("metrics", "grpc") {
+	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") {
 		exp, err = otlpmetricgrpc.New(ctx)
 	} else {
 		exp, err = otlpmetrichttp.New(ctx)

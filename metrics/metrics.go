@@ -47,7 +47,7 @@ func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sd
 
 	var exporter sdk.Exporter
 
-	if common.CheckOtlpProtocol("metrics", "grpc") {
+	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") {
 		exporter, err = otlpmetricgrpc.New(ctx)
 		if err != nil {
 			return ctx, nil, err

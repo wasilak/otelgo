@@ -5,24 +5,11 @@ import (
 	"strings"
 )
 
-func CheckOtlpProtocol(dataType string, protocol string) bool {
+func IsOtlpProtocolGrpc(dataType string) bool {
 
-	protocolLower := strings.ToLower(protocol)
-
-	switch strings.ToLower(dataType) {
-	case "traces":
-		if os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL") == protocolLower {
-			return true
-		}
-	case "logs":
-		if os.Getenv("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL") == protocolLower {
-			return true
-		}
-	case "metrics":
-		if os.Getenv("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") == protocolLower {
-			return true
-		}
+	if os.Getenv(strings.ToUpper(dataType)) == "grpc" {
+		return true
 	}
 
-	return os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == protocolLower
+	return os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == "grpc"
 }
