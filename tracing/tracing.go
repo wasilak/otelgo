@@ -2,10 +2,10 @@ package tracing
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"dario.cat/mergo"
+	"github.com/wasilak/otelgo/common"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -45,20 +45,12 @@ func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *sd
 
 	var client otlptrace.Client
 
-	// This code block is checking the value of the environment variable `OTEL_EXPORTER_OTLP_PROTOCOL`. If
-	// the value is "grpc", it creates a new gRPC client using `otlptracegrpc.NewClient()`. If the value
-	// is anything else, it creates a new HTTP client using `otlptracehttp.NewClient()`. The client is
-	// used later to initialize the exporter for OpenTelemetry tracing.
-	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == "grpc" {
+	if common.CheckOtlpProtocol("traces", "grpc") {
 		client = otlptracegrpc.NewClient()
 	} else {
 		client = otlptracehttp.NewClient()
 	}
 
-	// The code `exporter, err := otlptrace.New(ctx, client)` is initializing an exporter for
-	// OpenTelemetry tracing. It creates a new exporter using the provided client, which can be either a
-	// gRPC client (`otlptracegrpc.Client`) or an HTTP client (`otlptracehttp.Client`) based on the value
-	// of the environment variable `OTEL_EXPORTER_OTLP_PROTOCOL`.
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
 		return ctx, nil, err

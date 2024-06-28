@@ -3,9 +3,9 @@ package tracing
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
+	"github.com/wasilak/otelgo/common"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
@@ -17,7 +17,7 @@ func setupHostMetrics(ctx context.Context, res *resource.Resource, interval time
 	var err error
 	var exp metric.Exporter
 
-	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == "grpc" {
+	if common.CheckOtlpProtocol("metrics", "grpc") {
 		exp, err = otlpmetricgrpc.New(ctx)
 	} else {
 		exp, err = otlpmetrichttp.New(ctx)
