@@ -9,13 +9,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// The `const TraceIDKey = "trace_id"` line is declaring a constant variable named `TraceIDKey` with
-// the value `"trace_id"`. This constant is used as a key to add an attribute to a log record.
-const TraceIDKey = "trace_id"
+// The `const TraceIDKey = "TraceId"` line is declaring a constant variable named `TraceIDKey` with
+// the value `"TraceId"`. This constant is used as a key to add an attribute to a log record.
+const TraceIDKey = "TraceId"
 
-// The line `const SpanIDKey = "span_id"` is declaring a constant variable named `SpanIDKey` with the
-// value `"span_id"`. This constant is used as a key to add an attribute to a log record.
-const SpanIDKey = "span_id"
+// The line `const SpanIDKey = "SpanId"` is declaring a constant variable named `SpanIDKey` with the
+// value `"SpanId"`. This constant is used as a key to add an attribute to a log record.
+const SpanIDKey = "SpanId"
 
 // The TracingHandler type is a wrapper around a slog.Handler.
 // @property handler - The `handler` property is a variable of type `slog.Handler`.
