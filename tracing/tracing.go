@@ -19,17 +19,17 @@ import (
 // https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/#general-sdk-configuration
 // OTEL_TRACES_SAMPLER see: https://opentelemetry.io/docs/specs/otel/trace/sdk/#sampling
 
-// The OtelGoTracingConfig type is used to configure whether host metrics are enabled or not.
+// The Config type is used to configure whether host metrics are enabled or not.
 // @property {bool} HostMetricsEnabled - A boolean value that indicates whether host metrics are
 // enabled or not.
-type OtelGoTracingConfig struct {
+type Config struct {
 	HostMetricsEnabled     bool          `json:"host_metrics_enabled"`     // HostMetricsEnabled specifies whether host metrics are enabled. Default is false.
 	HostMetricsInterval    time.Duration `json:"host_metrics_interval"`    // HostMetricsInterval specifies the interval at which host metrics are collected. Default is 2 seconds.
 	RuntimeMetricsEnabled  bool          `json:"runtime_metrics_enabled"`  // RuntimeMetricsEnabled specifies whether runtime metrics are enabled. Default is false.
 	RuntimeMetricsInterval time.Duration `json:"runtime_metrics_interval"` // RuntimeMetricsInterval specifies the interval at which runtime metrics are collected. Default is 2 seconds.
 }
 
-var defaultConfig = OtelGoTracingConfig{
+var defaultConfig = Config{
 	HostMetricsEnabled:     false,
 	RuntimeMetricsEnabled:  false,
 	HostMetricsInterval:    2 * time.Second,
@@ -38,7 +38,7 @@ var defaultConfig = OtelGoTracingConfig{
 
 // The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
 // exporter, and resource.
-func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *trace.TracerProvider, error) {
+func Init(ctx context.Context, config Config) (context.Context, *trace.TracerProvider, error) {
 
 	// The code `err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)` is using the `mergo`
 	// library to merge the `config` object into the `defaultConfig` object.
@@ -81,7 +81,7 @@ func Init(ctx context.Context, config OtelGoTracingConfig) (context.Context, *tr
 	// The `if defaultConfig.HostMetricsEnabled` condition checks if the `HostMetricsEnabled` field in the
 	// `defaultConfig` variable is set to `true`. If it is `true`, it means that host metrics are enabled.
 	if defaultConfig.HostMetricsEnabled {
-		setupHostMetrics(ctx, res, defaultConfig.HostMetricsInterval.Abs())
+		setupHostMetrics(ctx, res, defaultConfig.HostMetricsInterval)
 	}
 
 	if defaultConfig.RuntimeMetricsEnabled {
