@@ -20,7 +20,19 @@
         {
           "gomodTidy": true
         }
+      ],
+      "labels": [
+        "go"
+      ]
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "labels": [
+        "github-actions"
       ]
     }
   ]
 }
+
