@@ -5,7 +5,7 @@ go 1.22
 require (
 	dario.cat/mergo v1.0.1
 	go.opentelemetry.io/contrib/instrumentation/host v0.56.0
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.54.0
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.56.0
 	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.7.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.7.0

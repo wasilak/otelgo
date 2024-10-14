@@ -64,6 +64,8 @@ go.opentelemetry.io/contrib/instrumentation/runtime v0.53.0 h1:nOlJEAJyrcy8hexK6
 go.opentelemetry.io/contrib/instrumentation/runtime v0.53.0/go.mod h1:u79lGGIlkg3Ryw425RbMjEkGYNxSnXRyR286O840+u4=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.54.0 h1:KD+8SJvRaW9n0vE0UgkytT207J3CmV1hGf9GYYU73ns=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.54.0/go.mod h1:/CsTuLR28IN3Vn13YEc72HljfHiGOMXiCbl4xiCSDhA=
+go.opentelemetry.io/contrib/instrumentation/runtime v0.56.0 h1:s7wHG+t8bEoH7ibWk1nk682h7EoWLJ5/8j+TSO3bX/o=
+go.opentelemetry.io/contrib/instrumentation/runtime v0.56.0/go.mod h1:Q8Hsv3d9DwryfIl+ebj4mY81IYVRSPy4QfxroVZwqLo=
 go.opentelemetry.io/otel v1.28.0 h1:/SqNcYk+idO0CxKEUOtKQClMK/MimZihKYMruSMViUo=
 go.opentelemetry.io/otel v1.28.0/go.mod h1:q68ijF8Fc8CnMHKyzqL6akLO46ePnjkgfIMIjUIX9z4=
 go.opentelemetry.io/otel v1.29.0 h1:PdomN/Al4q/lN6iBJEN3AwPvUiHPMlt93c8bqTG5Llw=
