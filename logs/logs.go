@@ -15,10 +15,12 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
+// OtelGoLogsConfig specifies the configuration for the OpenTelemetry logs.
 type OtelGoLogsConfig struct {
 	Attributes []attribute.KeyValue `json:"attributes"` // Attributes specifies the attributes to be added to the logger resource. Default is an empty slice.
 }
 
+// defaultConfig specifies the default configuration for the OpenTelemetry logs.
 var defaultConfig = OtelGoLogsConfig{
 	Attributes: []attribute.KeyValue{
 		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
@@ -26,6 +28,7 @@ var defaultConfig = OtelGoLogsConfig{
 	},
 }
 
+// Init initializes an OpenTelemetry logger with a specified configuration.
 func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.LoggerProvider, error) {
 	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
 	if err != nil {
@@ -71,6 +74,7 @@ func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.L
 	return ctx, logProvider, nil
 }
 
+// Shutdown closes the logger provider.
 func Shutdown(ctx context.Context, logProvider *sdk.LoggerProvider) {
 	defer func() {
 		if err := logProvider.Shutdown(ctx); err != nil {

@@ -15,10 +15,12 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
+// OtelGoMetricsConfig specifies the configuration for the OpenTelemetry metrics.
 type OtelGoMetricsConfig struct {
 	Attributes []attribute.KeyValue `json:"attributes"` // Attributes specifies the attributes to be added to the metric resource. Default is an empty slice.
 }
 
+// defaultConfig specifies the default configuration for the OpenTelemetry metrics.
 var defaultConfig = OtelGoMetricsConfig{
 	Attributes: []attribute.KeyValue{
 		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
@@ -26,6 +28,7 @@ var defaultConfig = OtelGoMetricsConfig{
 	},
 }
 
+// Init initializes an OpenTelemetry metric provider with a specified configuration.
 func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sdk.MeterProvider, error) {
 	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
 	if err != nil {
@@ -69,6 +72,7 @@ func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sd
 	return ctx, meterProvider, nil
 }
 
+// Shutdown stops the metric provider.
 func Shutdown(ctx context.Context, meterProvider *sdk.MeterProvider) {
 	defer func() {
 		err := meterProvider.Shutdown(ctx)

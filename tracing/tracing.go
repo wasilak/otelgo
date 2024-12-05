@@ -29,6 +29,7 @@ type Config struct {
 	RuntimeMetricsInterval time.Duration `json:"runtime_metrics_interval"` // RuntimeMetricsInterval specifies the interval at which runtime metrics are collected. Default is 2 seconds.
 }
 
+// The defaultConfig variable is an instance of the Config struct that specifies the default configuration
 var defaultConfig = Config{
 	HostMetricsEnabled:     false,
 	RuntimeMetricsEnabled:  false,
@@ -36,7 +37,7 @@ var defaultConfig = Config{
 	RuntimeMetricsInterval: 2 * time.Second,
 }
 
-// The `InitTracer` function initializes an OpenTelemetry tracer with a specified configuration,
+// The `Init` function initializes an OpenTelemetry tracer with a specified configuration,
 // exporter, and resource.
 func Init(ctx context.Context, config Config) (context.Context, *trace.TracerProvider, error) {
 
@@ -67,7 +68,6 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 	// environment variables.
 	res, err := resource.New(ctx,
 		resource.WithHost(),
-
 		resource.WithContainer(),
 		resource.WithProcess(),
 		resource.WithTelemetrySDK(),
@@ -104,6 +104,7 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 	return ctx, traceProvider, nil
 }
 
+// Shutdown gracefully shuts down the trace provider, ensuring all spans are flushed.
 func Shutdown(ctx context.Context, traceProvider *trace.TracerProvider) {
 	defer func() {
 		if err := traceProvider.Shutdown(ctx); err != nil {
