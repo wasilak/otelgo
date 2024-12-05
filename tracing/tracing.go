@@ -89,17 +89,25 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 	}
 
 	// Create the trace provider
-	tp := trace.NewTracerProvider(
+	traceProvider := trace.NewTracerProvider(
 		trace.WithBatcher(exporter),
 		trace.WithResource(res),
 	)
 
 	// Set the global trace provider
-	otel.SetTracerProvider(tp)
+	otel.SetTracerProvider(traceProvider)
 
 	// Set the propagator
 	propagator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
 	otel.SetTextMapPropagator(propagator)
 
-	return ctx, tp, nil
+	return ctx, traceProvider, nil
+}
+
+func Shutdown(ctx context.Context, traceProvider *trace.TracerProvider) {
+	defer func() {
+		if err := traceProvider.Shutdown(ctx); err != nil {
+			panic(err)
+		}
+	}()
 }

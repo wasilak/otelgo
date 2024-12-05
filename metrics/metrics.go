@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	sdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
 type OtelGoMetricsConfig struct {
@@ -64,14 +64,16 @@ func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sd
 		sdk.WithReader(sdk.NewPeriodicReader(exporter)),
 	)
 
-	// defer func() {
-	// 	err := meterProvider.Shutdown(context.Background())
-	// 	if err != nil {
-	// 		log.Fatalln(err)
-	// 	}
-	// }()
-
 	otel.SetMeterProvider(meterProvider)
 
 	return ctx, meterProvider, nil
+}
+
+func Shutdown(ctx context.Context, meterProvider *sdk.MeterProvider) {
+	defer func() {
+		err := meterProvider.Shutdown(ctx)
+		if err != nil {
+			panic(err)
+		}
+	}()
 }

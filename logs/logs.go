@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/log/global"
 	sdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
 type OtelGoLogsConfig struct {
@@ -66,14 +66,15 @@ func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.L
 		sdk.WithProcessor(processor),
 	)
 
-	// Handle shutdown properly so nothing leaks.
-	// defer func() {
-	// 	if err := logProvider.Shutdown(ctx); err != nil {
-	// 		log.Fatalln(err)
-	// 	}
-	// }()
-
 	global.SetLoggerProvider(logProvider)
 
 	return ctx, logProvider, nil
+}
+
+func Shutdown(ctx context.Context, logProvider *sdk.LoggerProvider) {
+	defer func() {
+		if err := logProvider.Shutdown(ctx); err != nil {
+			panic(err)
+		}
+	}()
 }
