@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/log/global"
 	sdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 // OtelGoLogsConfig specifies the configuration for the OpenTelemetry logs.
