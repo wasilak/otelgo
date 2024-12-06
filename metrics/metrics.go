@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"os"
 
 	"dario.cat/mergo"
 	"github.com/wasilak/otelgo/common"
@@ -12,7 +11,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	sdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 // OtelGoMetricsConfig specifies the configuration for the OpenTelemetry metrics.
@@ -22,10 +20,7 @@ type OtelGoMetricsConfig struct {
 
 // defaultConfig specifies the default configuration for the OpenTelemetry metrics.
 var defaultConfig = OtelGoMetricsConfig{
-	Attributes: []attribute.KeyValue{
-		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
-		semconv.ServiceVersionKey.String("v0.0.0"),
-	},
+	Attributes: []attribute.KeyValue{},
 }
 
 // Init initializes an OpenTelemetry metric provider with a specified configuration.

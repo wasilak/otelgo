@@ -2,7 +2,6 @@ package logs
 
 import (
 	"context"
-	"os"
 
 	"dario.cat/mergo"
 	"github.com/wasilak/otelgo/common"
@@ -12,7 +11,6 @@ import (
 	"go.opentelemetry.io/otel/log/global"
 	sdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 // OtelGoLogsConfig specifies the configuration for the OpenTelemetry logs.
@@ -22,10 +20,7 @@ type OtelGoLogsConfig struct {
 
 // defaultConfig specifies the default configuration for the OpenTelemetry logs.
 var defaultConfig = OtelGoLogsConfig{
-	Attributes: []attribute.KeyValue{
-		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
-		semconv.ServiceVersionKey.String("v0.0.0"),
-	},
+	Attributes: []attribute.KeyValue{},
 }
 
 // Init initializes an OpenTelemetry logger with a specified configuration.
