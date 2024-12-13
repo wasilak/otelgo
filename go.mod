@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	dario.cat/mergo v1.0.1
 	go.opentelemetry.io/contrib/instrumentation/host v0.58.0
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.57.0
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.58.0
 	go.opentelemetry.io/otel v1.33.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.9.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.9.0
