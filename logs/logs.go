@@ -2,6 +2,7 @@ package logs
 
 import (
 	"context"
+	"crypto/tls"
 	"os"
 
 	"dario.cat/mergo"
@@ -13,6 +14,8 @@ import (
 	sdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // OtelGoLogsConfig specifies the configuration for the OpenTelemetry logs.
@@ -50,13 +53,26 @@ func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.L
 
 	var exporter sdk.Exporter
 
-	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL") {
-		exporter, err = otlploggrpc.New(ctx)
+	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL") { // Create a custom TLS configuration
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true, // WARNING: This skips certificate verification!
+		}
+
+		// Configure gRPC dial options to use the custom TLS configuration
+		grpcOpts := []grpc.DialOption{
+			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		}
+
+		exporter, err = otlploggrpc.New(ctx, otlploggrpc.WithDialOption(grpcOpts...))
 		if err != nil {
 			return ctx, nil, err
 		}
 	} else {
-		exporter, err = otlploghttp.New(ctx)
+		// Create a custom TLS configuration
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true, // WARNING: Skips certificate verification
+		}
+		exporter, err = otlploghttp.New(ctx, otlploghttp.WithTLSClientConfig(tlsConfig))
 		if err != nil {
 			return ctx, nil, err
 		}

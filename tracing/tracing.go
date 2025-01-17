@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"dario.cat/mergo"
@@ -13,6 +14,8 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Sampler control
@@ -51,9 +54,28 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 	var client otlptrace.Client
 
 	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL") {
-		client = otlptracegrpc.NewClient()
+		// Create a custom TLS configuration
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true, // WARNING: This skips certificate verification!
+		}
+
+		// Configure gRPC dial options to use the custom TLS configuration
+		grpcOpts := []grpc.DialOption{
+			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		}
+
+		client = otlptracegrpc.NewClient(
+			otlptracegrpc.WithDialOption(grpcOpts...),
+		)
 	} else {
-		client = otlptracehttp.NewClient()
+		// Create a custom TLS configuration
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true, // WARNING: Skips certificate verification
+		}
+
+		client = otlptracehttp.NewClient(
+			otlptracehttp.WithTLSClientConfig(tlsConfig),
+		)
 	}
 
 	exporter, err := otlptrace.New(ctx, client)
