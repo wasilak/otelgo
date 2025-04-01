@@ -2,7 +2,7 @@ module github.com/wasilak/otelgo
 
 go 1.24
 
-toolchain go1.24.1
+toolchain go1.24.2
 
 require (
 	dario.cat/mergo v1.0.1
