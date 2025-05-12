@@ -12,15 +12,23 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// The TracingHandler type is a wrapper around a slog.Handler.
-// @property handler - The `handler` property is a variable of type `slog.Handler`.
+// TracingHandler wraps a slog.Handler to add OpenTelemetry tracing information to log records.
+// It enriches log entries with trace context, span details, and other OpenTelemetry attributes.
 type TracingHandler struct {
 	handler slog.Handler
 }
 
 const sevOffset = slog.Level(otellog.SeverityDebug) - slog.LevelDebug
 
-// The function NewTracingHandler creates a new TracingHandler by wrapping an existing slog.Handler.
+// NewTracingHandler creates a new TracingHandler that wraps the provided slog.Handler.
+// If the provided handler is already a TracingHandler, it returns the underlying handler
+// to avoid multiple layers of wrapping.
+//
+// Parameters:
+//   - h: The slog.Handler to wrap
+//
+// Returns:
+//   - *TracingHandler: A new handler that adds tracing information to log records
 func NewTracingHandler(h slog.Handler) *TracingHandler {
 	// avoid chains of handlers.
 	if lh, ok := h.(*TracingHandler); ok {
@@ -29,19 +37,38 @@ func NewTracingHandler(h slog.Handler) *TracingHandler {
 	return &TracingHandler{h}
 }
 
-// Handler returns the Handler wrapped by h.
+// Handler returns the underlying slog.Handler wrapped by this TracingHandler.
+// This method is useful when you need to access or modify the base handler.
+//
+// Returns:
+//   - slog.Handler: The underlying handler
 func (h *TracingHandler) Handler() slog.Handler {
 	return h.handler
 }
 
-// The `Enabled` method is a function defined on the `TracingHandler` struct. It takes two parameters:
-// `ctx` of type `context.Context` and `level` of type `slog.Level`.
+// Enabled reports whether the handler handles records at the given level.
+// The check is delegated to the underlying handler.
+//
+// Parameters:
+//   - ctx: The context containing the current span
+//   - level: The log level to check
+//
+// Returns:
+//   - bool: true if the handler processes records at the given level
 func (h *TracingHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.handler.Enabled(ctx, level)
 }
 
-// The `Handle` method is a function defined on the `TracingHandler` struct. It takes two parameters:
-// `ctx` of type `context.Context` and `r` of type `slog.Record`.
+// Handle processes the log record by adding OpenTelemetry trace context and span information.
+// If there is an active span, it adds trace ID, span ID, and other span attributes to the record.
+// For error level logs, it also sets the span status to error.
+//
+// Parameters:
+//   - ctx: The context containing the current span
+//   - r: The log record to process
+//
+// Returns:
+//   - error: Non-nil if handling the record fails
 func (h *TracingHandler) Handle(ctx context.Context, r slog.Record) error {
 	span := trace.SpanFromContext(ctx)
 
@@ -56,16 +83,24 @@ func (h *TracingHandler) Handle(ctx context.Context, r slog.Record) error {
 	return h.handler.Handle(ctx, r)
 }
 
-// The `func (h *TracingHandler) WithAttrs(attrs []slog.Attr) slog.Handler` method is a function
-// defined on the `TracingHandler` struct. It takes a parameter `attrs` of type `[]slog.Attr`, which
-// represents a list of log attributes.
+// WithAttrs returns a new TracingHandler whose handler includes the given attributes.
+//
+// Parameters:
+//   - attrs: The attributes to add to all records
+//
+// Returns:
+//   - slog.Handler: A new handler with the additional attributes
 func (h *TracingHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return NewTracingHandler(h.handler.WithAttrs(attrs))
 }
 
-// The `func (h *TracingHandler) WithGroup(name string) slog.Handler {` method is defining a function
-// on the `TracingHandler` struct. This function takes a parameter `name` of type `string`, which
-// represents the name of the log group.
+// WithGroup returns a new TracingHandler whose handler includes the given group.
+//
+// Parameters:
+//   - name: The name of the group
+//
+// Returns:
+//   - slog.Handler: A new handler with the additional group
 func (h *TracingHandler) WithGroup(name string) slog.Handler {
 	return NewTracingHandler(h.handler.WithGroup(name))
 }

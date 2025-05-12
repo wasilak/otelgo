@@ -1,3 +1,23 @@
+// Shutdown gracefully shuts down the logger provider, ensuring all logs are flushed.
+//
+// ✅ Proper usage pattern:
+//   1. Initialize the logger via Init()
+//   2. Defer Shutdown() with the provider as an argument
+//   3. Ensure the context is valid for the duration of the program
+//
+// Example:
+//   ctx := context.Background()
+//   provider, _ := logs.Init(ctx, logs.OtelGoLogsConfig{
+//       Attributes: []attribute.KeyValue{
+//           semconv.ServiceNameKey.String("my-service"),
+//           semconv.ServiceVersionKey.String("1.0.0"),
+//       },
+//   })
+//   defer logs.Shutdown(ctx, provider) // Ensures shutdown happens on exit
+//
+// ⚠️ Critical: Always call Shutdown() when your application is exiting to prevent data loss
+//              Defer ensures this happens even if the program terminates unexpectedly
+
 package logs
 
 import (
@@ -31,7 +51,37 @@ var defaultConfig = OtelGoLogsConfig{
 	},
 }
 
-// Init initializes an OpenTelemetry logger with a specified configuration.
+// Init initializes the OpenTelemetry logger provider with the specified configuration.
+// It sets up a log pipeline by configuring exporters and resource attributes.
+//
+// The function automatically merges provided configuration with defaults and sets up
+// appropriate OTLP exporters based on the environment configuration.
+//
+// Parameters:
+//   - ctx: The context for controlling logger initialization lifetime
+//   - config: The configuration containing logger setup options and attributes
+//
+// Returns:
+//   - context.Context: Updated context with logger provider
+//   - *sdk.LoggerProvider: Configured logger provider for emitting logs
+//   - error: Non-nil if initialization fails
+//
+// Example:
+//
+//	config := logs.OtelGoLogsConfig{
+//	    Attributes: []attribute.KeyValue{
+//	        semconv.ServiceNameKey.String("my-service"),
+//	    },
+//	}
+//	ctx, provider, err := logs.Init(context.Background(), config)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	defer func() {
+//	    if err := provider.Shutdown(ctx); err != nil {
+//	        log.Printf("failed to shutdown provider: %v", err)
+//	    }
+//	}()
 func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.LoggerProvider, error) {
 	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
 	if err != nil {
@@ -90,11 +140,24 @@ func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.L
 	return ctx, logProvider, nil
 }
 
-// Shutdown closes the logger provider.
-func Shutdown(ctx context.Context, logProvider *sdk.LoggerProvider) {
-	defer func() {
-		if err := logProvider.Shutdown(ctx); err != nil {
-			panic(err)
-		}
-	}()
+// Shutdown gracefully shuts down the logger provider and flushes any pending logs.
+// It should be called when the application is terminating to ensure all logs are exported.
+//
+// Parameters:
+//   - ctx: The context for controlling shutdown timeout
+//   - logProvider: The provider instance to shut down
+//
+// Returns:
+//   - error: Non-nil if shutdown fails
+//
+// Example:
+//
+//	ctx := context.Background()
+//	ctx, provider, err := logs.Init(ctx, logs.OtelGoLogsConfig{})
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	defer logs.Shutdown(ctx, provider)
+func Shutdown(ctx context.Context, logProvider *sdk.LoggerProvider) error {
+	return logProvider.Shutdown(ctx)
 }

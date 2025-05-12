@@ -40,8 +40,38 @@ var defaultConfig = Config{
 	RuntimeMetricsInterval: 2 * time.Second,
 }
 
-// The `Init` function initializes an OpenTelemetry tracer with a specified configuration,
-// exporter, and resource.
+// Init initializes the OpenTelemetry tracer provider with the specified configuration.
+// It sets up a trace pipeline by configuring exporters and resource attributes.
+//
+// The function automatically merges provided configuration with defaults and sets up
+// appropriate OTLP exporters based on the environment configuration. It also configures
+// host and runtime metrics if enabled in the configuration.
+//
+// Parameters:
+//   - ctx: The context for controlling tracer initialization lifetime
+//   - config: The configuration containing tracer setup options and metrics settings
+//
+// Returns:
+//   - context.Context: Updated context with tracer provider
+//   - *trace.TracerProvider: Configured tracer provider for creating spans
+//   - error: Non-nil if initialization fails
+//
+// Example:
+//
+//	config := tracing.Config{
+//	    HostMetricsEnabled: true,
+//	    RuntimeMetricsEnabled: true,
+//	    HostMetricsInterval: 5 * time.Second,
+//	}
+//	ctx, provider, err := tracing.Init(context.Background(), config)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	defer func() {
+//	    if err := provider.Shutdown(ctx); err != nil {
+//	        log.Printf("failed to shutdown provider: %v", err)
+//	    }
+//	}()
 func Init(ctx context.Context, config Config) (context.Context, *trace.TracerProvider, error) {
 
 	// The code `err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)` is using the `mergo`
@@ -126,11 +156,24 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 	return ctx, traceProvider, nil
 }
 
-// Shutdown gracefully shuts down the trace provider, ensuring all spans are flushed.
-func Shutdown(ctx context.Context, traceProvider *trace.TracerProvider) {
-	defer func() {
-		if err := traceProvider.Shutdown(ctx); err != nil {
-			panic(err)
-		}
-	}()
+// Shutdown gracefully shuts down the tracer provider and flushes any pending spans.
+// It should be called when the application is terminating to ensure all traces are exported.
+//
+// Parameters:
+//   - ctx: The context for controlling shutdown timeout
+//   - traceProvider: The provider instance to shut down
+//
+// Returns:
+//   - error: Non-nil if shutdown fails
+//
+// Example:
+//
+//	ctx := context.Background()
+//	ctx, provider, err := tracing.Init(ctx, tracing.Config{})
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	defer tracing.Shutdown(ctx, provider)
+func Shutdown(ctx context.Context, traceProvider *trace.TracerProvider) error {
+	return traceProvider.Shutdown(ctx)
 }
