@@ -1,29 +1,41 @@
-name: release
+name: build_and_release
 
-# Controls when the workflow will run
 on:
   push:
+    branches:
+      - '**'
     tags:
       - 'v*.*.*'
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 permissions:
   contents: write
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Run tests
+        run: go test -v ./...
+
+  release:
+    runs-on: ubuntu-latest
+
+    needs: build
 
     if: startsWith(github.ref, 'refs/tags/')
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
       - name: Release
