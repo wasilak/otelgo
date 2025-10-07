@@ -1,6 +1,6 @@
 module github.com/wasilak/otelgo
 
-go 1.24
+go 1.24.0
 
 toolchain go1.25.1
 
@@ -21,7 +21,7 @@ require (
 	go.opentelemetry.io/otel/sdk/log v0.14.0
 	go.opentelemetry.io/otel/sdk/metric v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
-	google.golang.org/grpc v1.75.1
+	google.golang.org/grpc v1.76.0
 )
 
 require (
