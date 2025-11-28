@@ -7,7 +7,6 @@ import (
 
 	"github.com/wasilak/otelgo/internal"
 	"go.opentelemetry.io/otel/attribute"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 // BenchmarkInitBasic benchmarks the basic initialization of the logs provider with minimal configuration.
@@ -58,8 +57,8 @@ func BenchmarkInitWithAttributes(b *testing.B) {
 	os.Setenv("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL", "http")
 
 	attrs := []attribute.KeyValue{
-		semconv.ServiceNameKey.String("test-service"),
-		semconv.ServiceVersionKey.String("v1.0.0"),
+		attribute.String("service.name", "test-service"),
+		attribute.String("service.version", "v1.0.0"),
 		attribute.String("env", "production"),
 		attribute.Int("partition", 1),
 		attribute.Bool("feature.enabled", true),

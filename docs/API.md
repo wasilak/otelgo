@@ -66,7 +66,6 @@ Initializes the OpenTelemetry logger provider with the specified configuration. 
 import (
     "context"
     "go.opentelemetry.io/otel/attribute"
-    semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
     "github.com/wasilak/otelgo/logs"
 )
 
@@ -74,7 +73,7 @@ ctx := context.Background()
 
 config := logs.OtelGoLogsConfig{
     Attributes: []attribute.KeyValue{
-        semconv.ServiceNameKey.String("my-service"),
+        attribute.String("service.name", "my-service"),
     },
 }
 
@@ -199,7 +198,6 @@ Initializes the OpenTelemetry metric provider with the specified configuration. 
 import (
     "context"
     "go.opentelemetry.io/otel/attribute"
-    semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
     "github.com/wasilak/otelgo/metrics"
 )
 
@@ -207,7 +205,7 @@ ctx := context.Background()
 
 config := metrics.OtelGoMetricsConfig{
     Attributes: []attribute.KeyValue{
-        semconv.ServiceNameKey.String("my-service"),
+        attribute.String("service.name", "my-service"),
     },
 }
 

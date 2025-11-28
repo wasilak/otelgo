@@ -9,13 +9,13 @@ import (
 	"github.com/wasilak/otelgo/common"
 	"github.com/wasilak/otelgo/internal"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -138,7 +138,7 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 		resource.WithTelemetrySDK(),
 		resource.WithOS(),
 		resource.WithFromEnv(),
-		resource.WithAttributes(semconv.ServiceVersionKey.String("v1.0.0")), // Default to v1.0.0 for this release
+		resource.WithAttributes(attribute.String("service.version", "v1.0.0")), // Default to v1.0.0 for this release
 	)
 	if err != nil {
 		return ctx, nil, err

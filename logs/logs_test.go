@@ -12,7 +12,6 @@ import (
 
 	"github.com/wasilak/otelgo/internal"
 	"go.opentelemetry.io/otel/attribute"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 func TestInit(t *testing.T) {
@@ -42,7 +41,7 @@ func TestInit(t *testing.T) {
 			name: "basic initialization",
 			config: OtelGoLogsConfig{
 				Attributes: []attribute.KeyValue{
-					semconv.ServiceNameKey.String("test-service"),
+					attribute.String("service.name", "test-service"),
 				},
 			},
 			wantErr: false,
@@ -56,8 +55,8 @@ func TestInit(t *testing.T) {
 			name: "with multiple attributes",
 			config: OtelGoLogsConfig{
 				Attributes: []attribute.KeyValue{
-					semconv.ServiceNameKey.String("test-service"),
-					semconv.ServiceVersionKey.String("1.0.0"),
+					attribute.String("service.name", "test-service"),
+					attribute.String("service.version", "1.0.0"),
 					attribute.String("custom.attribute", "value"),
 				},
 			},
@@ -93,7 +92,7 @@ func TestShutdown(t *testing.T) {
 	ctx := context.Background()
 	config := OtelGoLogsConfig{
 		Attributes: []attribute.KeyValue{
-			semconv.ServiceNameKey.String("test-service"),
+			attribute.String("service.name", "test-service"),
 		},
 	}
 
@@ -223,7 +222,7 @@ func TestInitBackwardCompatibility(t *testing.T) {
 	ctx := context.Background()
 	config := OtelGoLogsConfig{
 		Attributes: []attribute.KeyValue{
-			semconv.ServiceNameKey.String("backward-compatible-service"),
+			attribute.String("service.name", "backward-compatible-service"),
 		},
 	}
 

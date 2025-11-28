@@ -9,8 +9,8 @@
 //   ctx := context.Background()
 //   provider, _ := logs.Init(ctx, logs.OtelGoLogsConfig{
 //       Attributes: []attribute.KeyValue{
-//           semconv.ServiceNameKey.String("my-service"),
-//           semconv.ServiceVersionKey.String("1.0.0"),
+//           attribute.String("service.name", "my-service"),
+//           attribute.String("service.version", "1.0.0"),
 //       },
 //   })
 //   defer logs.Shutdown(ctx, provider) // Ensures shutdown happens on exit
@@ -33,7 +33,6 @@ import (
 	"go.opentelemetry.io/otel/log/global"
 	sdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -47,8 +46,8 @@ type OtelGoLogsConfig struct {
 // defaultConfig specifies the default configuration for the OpenTelemetry logs.
 var defaultConfig = OtelGoLogsConfig{
 	Attributes: []attribute.KeyValue{
-		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
-		semconv.ServiceVersionKey.String("v1.0.0"),
+		attribute.String("service.name", os.Getenv("OTEL_SERVICE_NAME")),
+		attribute.String("service.version", "v1.0.0"),
 	},
 }
 
@@ -71,7 +70,7 @@ var defaultConfig = OtelGoLogsConfig{
 //
 //	config := logs.OtelGoLogsConfig{
 //	    Attributes: []attribute.KeyValue{
-//	        semconv.ServiceNameKey.String("my-service"),
+//	        attribute.String("service.name", "my-service"),
 //	    },
 //	}
 //	ctx, provider, err := logs.Init(context.Background(), config)

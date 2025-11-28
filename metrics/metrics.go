@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	sdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -27,8 +26,8 @@ type OtelGoMetricsConfig struct {
 // defaultConfig specifies the default configuration for the OpenTelemetry metrics.
 var defaultConfig = OtelGoMetricsConfig{
 	Attributes: []attribute.KeyValue{
-		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
-		semconv.ServiceVersionKey.String("v1.0.0"),
+		attribute.String("service.name", os.Getenv("OTEL_SERVICE_NAME")),
+		attribute.String("service.version", "v1.0.0"),
 	},
 }
 
@@ -51,7 +50,7 @@ var defaultConfig = OtelGoMetricsConfig{
 //
 //	config := metrics.OtelGoMetricsConfig{
 //	    Attributes: []attribute.KeyValue{
-//	        semconv.ServiceNameKey.String("my-service"),
+//	        attribute.String("service.name", "my-service"),
 //	    },
 //	}
 //	ctx, provider, err := metrics.Init(context.Background(), config)
