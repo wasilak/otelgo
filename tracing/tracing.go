@@ -2,11 +2,12 @@ package tracing
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 	"time"
 
 	"dario.cat/mergo"
 	"github.com/wasilak/otelgo/common"
+	"github.com/wasilak/otelgo/internal"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -14,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -26,10 +28,11 @@ import (
 // @property {bool} HostMetricsEnabled - A boolean value that indicates whether host metrics are
 // enabled or not.
 type Config struct {
-	HostMetricsEnabled     bool          `json:"host_metrics_enabled"`     // HostMetricsEnabled specifies whether host metrics are enabled. Default is false.
-	HostMetricsInterval    time.Duration `json:"host_metrics_interval"`    // HostMetricsInterval specifies the interval at which host metrics are collected. Default is 2 seconds.
-	RuntimeMetricsEnabled  bool          `json:"runtime_metrics_enabled"`  // RuntimeMetricsEnabled specifies whether runtime metrics are enabled. Default is false.
-	RuntimeMetricsInterval time.Duration `json:"runtime_metrics_interval"` // RuntimeMetricsInterval specifies the interval at which runtime metrics are collected. Default is 2 seconds.
+	HostMetricsEnabled     bool                `json:"host_metrics_enabled"`     // HostMetricsEnabled specifies whether host metrics are enabled. Default is false.
+	HostMetricsInterval    time.Duration       `json:"host_metrics_interval"`    // HostMetricsInterval specifies the interval at which host metrics are collected. Default is 2 seconds.
+	RuntimeMetricsEnabled  bool                `json:"runtime_metrics_enabled"`  // RuntimeMetricsEnabled specifies whether runtime metrics are enabled. Default is false.
+	RuntimeMetricsInterval time.Duration       `json:"runtime_metrics_interval"` // RuntimeMetricsInterval specifies the interval at which runtime metrics are collected. Default is 2 seconds.
+	TLS                    *internal.TLSConfig // TLS specifies the TLS configuration for exporters. Default is nil.
 }
 
 // The defaultConfig variable is an instance of the Config struct that specifies the default configuration
@@ -73,22 +76,37 @@ var defaultConfig = Config{
 //	    }
 //	}()
 func Init(ctx context.Context, config Config) (context.Context, *trace.TracerProvider, error) {
+	localConfig := Config{
+		HostMetricsEnabled:     defaultConfig.HostMetricsEnabled,
+		HostMetricsInterval:    defaultConfig.HostMetricsInterval,
+		RuntimeMetricsEnabled:  defaultConfig.RuntimeMetricsEnabled,
+		RuntimeMetricsInterval: defaultConfig.RuntimeMetricsInterval,
+		TLS:                    config.TLS,
+	}
 
 	// The code `err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)` is using the `mergo`
 	// library to merge the `config` object into the `defaultConfig` object.
-	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
+	err := mergo.Merge(&localConfig, config, mergo.WithOverride)
 	if err != nil {
 		return ctx, nil, err
+	}
+
+	if localConfig.TLS == nil {
+		localConfig.TLS = internal.NewTLSConfig()
+	}
+
+	if err := localConfig.TLS.Validate(); err != nil {
+		return ctx, nil, fmt.Errorf("invalid TLS configuration: %w", err)
+	}
+
+	tlsConfig, err := localConfig.TLS.BuildTLSConfig()
+	if err != nil {
+		return ctx, nil, fmt.Errorf("failed to build TLS config: %w", err)
 	}
 
 	var client otlptrace.Client
 
 	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL") {
-		// Create a custom TLS configuration
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, // WARNING: This skips certificate verification!
-		}
-
 		// Configure gRPC dial options to use the custom TLS configuration
 		grpcOpts := []grpc.DialOption{
 			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
@@ -98,11 +116,6 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 			otlptracegrpc.WithDialOption(grpcOpts...),
 		)
 	} else {
-		// Create a custom TLS configuration
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, // WARNING: Skips certificate verification
-		}
-
 		client = otlptracehttp.NewClient(
 			otlptracehttp.WithTLSClientConfig(tlsConfig),
 		)
@@ -125,6 +138,7 @@ func Init(ctx context.Context, config Config) (context.Context, *trace.TracerPro
 		resource.WithTelemetrySDK(),
 		resource.WithOS(),
 		resource.WithFromEnv(),
+		resource.WithAttributes(semconv.ServiceVersionKey.String("v1.0.0")), // Default to v1.0.0 for this release
 	)
 	if err != nil {
 		return ctx, nil, err

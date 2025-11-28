@@ -1,0 +1,1056 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>common: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/wasilak/otelgo/common/utils.go (100.0%)</option>
+				
+				<option value="file1">github.com/wasilak/otelgo/internal/tlsconfig.go (100.0%)</option>
+				
+				<option value="file2">github.com/wasilak/otelgo/logs/logs.go (78.6%)</option>
+				
+				<option value="file3">github.com/wasilak/otelgo/metrics/metrics.go (77.8%)</option>
+				
+				<option value="file4">github.com/wasilak/otelgo/slog/slog.go (70.7%)</option>
+				
+				<option value="file5">github.com/wasilak/otelgo/tracing/hostmetrics.go (0.0%)</option>
+				
+				<option value="file6">github.com/wasilak/otelgo/tracing/runtimemetrics.go (0.0%)</option>
+				
+				<option value="file7">github.com/wasilak/otelgo/tracing/tracing.go (78.1%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package common
+
+import (
+        "os"
+        "strings"
+)
+
+// IsOtlpProtocolGrpc determines if the OTLP protocol is set to gRPC for a given data type.
+// It checks both the specific data type environment variable and the general OTLP protocol setting.
+//
+// Parameters:
+//   - dataType: The type of data to check (e.g., "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL")
+//
+// Returns:
+//   - bool: true if the protocol is set to "grpc", false otherwise
+//
+// The function first checks the specific data type environment variable.
+// If not set to "grpc", it falls back to checking the general "OTEL_EXPORTER_OTLP_PROTOCOL".
+func IsOtlpProtocolGrpc(dataType string) bool <span class="cov8" title="1">{
+
+        if os.Getenv(strings.ToUpper(dataType)) == "grpc" </span><span class="cov8" title="1">{
+                return true
+        }</span>
+
+        <span class="cov8" title="1">return os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") == "grpc"</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package internal
+
+import (
+        "crypto/tls"
+        "crypto/x509"
+        "fmt"
+        "os"
+)
+
+type TLSConfig struct {
+        Insecure       bool
+        CACertPath     string
+        ClientCertPath string
+        ClientKeyPath  string
+        ServerName     string
+}
+
+func NewTLSConfig() *TLSConfig <span class="cov8" title="1">{
+        return &amp;TLSConfig{
+                Insecure:       os.Getenv("OTEL_EXPORTER_OTLP_INSECURE") == "true",
+                CACertPath:     os.Getenv("OTEL_EXPORTER_OTLP_CERTIFICATE"),
+                ClientCertPath: os.Getenv("OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE"),
+                ClientKeyPath:  os.Getenv("OTEL_EXPORTER_OTLP_CLIENT_KEY"),
+                ServerName:     os.Getenv("OTEL_EXPORTER_OTLP_SERVER_NAME"),
+        }
+}</span>
+
+func (c *TLSConfig) BuildTLSConfig() (*tls.Config, error) <span class="cov8" title="1">{
+        tlsConfig := &amp;tls.Config{
+                InsecureSkipVerify: c.Insecure,
+                ServerName:         c.ServerName,
+        }
+
+        if c.CACertPath != "" </span><span class="cov8" title="1">{
+                caCert, err := os.ReadFile(c.CACertPath)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">caCertPool := x509.NewCertPool()
+                if !caCertPool.AppendCertsFromPEM(caCert) </span><span class="cov8" title="1">{
+                        return nil, fmt.Errorf("failed to parse CA certificate")
+                }</span>
+
+                <span class="cov8" title="1">tlsConfig.RootCAs = caCertPool</span>
+        }
+
+        <span class="cov8" title="1">if c.ClientCertPath != "" &amp;&amp; c.ClientKeyPath != "" </span><span class="cov8" title="1">{
+                cert, err := tls.LoadX509KeyPair(c.ClientCertPath, c.ClientKeyPath)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, fmt.Errorf("failed to load client certificate: %w", err)
+                }</span>
+                <span class="cov8" title="1">tlsConfig.Certificates = []tls.Certificate{cert}</span>
+        }
+
+        <span class="cov8" title="1">return tlsConfig, nil</span>
+}
+
+func (c *TLSConfig) Validate() error <span class="cov8" title="1">{
+        if c.Insecure &amp;&amp; c.CACertPath != "" </span><span class="cov8" title="1">{
+                return fmt.Errorf("cannot specify both Insecure=true and CACertPath")
+        }</span>
+
+        <span class="cov8" title="1">if (c.ClientCertPath != "") != (c.ClientKeyPath != "") </span><span class="cov8" title="1">{
+                return fmt.Errorf("both ClientCertPath and ClientKeyPath must be specified")
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">// Shutdown gracefully shuts down the logger provider, ensuring all logs are flushed.
+//
+// ✅ Proper usage pattern:
+//   1. Initialize the logger via Init()
+//   2. Defer Shutdown() with the provider as an argument
+//   3. Ensure the context is valid for the duration of the program
+//
+// Example:
+//   ctx := context.Background()
+//   provider, _ := logs.Init(ctx, logs.OtelGoLogsConfig{
+//       Attributes: []attribute.KeyValue{
+//           semconv.ServiceNameKey.String("my-service"),
+//           semconv.ServiceVersionKey.String("1.0.0"),
+//       },
+//   })
+//   defer logs.Shutdown(ctx, provider) // Ensures shutdown happens on exit
+//
+// ⚠️ Critical: Always call Shutdown() when your application is exiting to prevent data loss
+//              Defer ensures this happens even if the program terminates unexpectedly
+
+package logs
+
+import (
+        "context"
+        "fmt"
+        "os"
+
+        "github.com/wasilak/otelgo/common"
+        "github.com/wasilak/otelgo/internal"
+        "go.opentelemetry.io/otel/attribute"
+        "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
+        "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
+        "go.opentelemetry.io/otel/log/global"
+        sdk "go.opentelemetry.io/otel/sdk/log"
+        "go.opentelemetry.io/otel/sdk/resource"
+        semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+        "google.golang.org/grpc"
+        "google.golang.org/grpc/credentials"
+)
+
+// OtelGoLogsConfig specifies the configuration for the OpenTelemetry logs.
+type OtelGoLogsConfig struct {
+        Attributes []attribute.KeyValue `json:"attributes"` // Attributes specifies the attributes to be added to the logger resource. Default is an empty slice.
+        TLS        *internal.TLSConfig
+}
+
+// defaultConfig specifies the default configuration for the OpenTelemetry logs.
+var defaultConfig = OtelGoLogsConfig{
+        Attributes: []attribute.KeyValue{
+                semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
+                semconv.ServiceVersionKey.String("v0.0.0"),
+        },
+}
+
+// Init initializes the OpenTelemetry logger provider with the specified configuration.
+// It sets up a log pipeline by configuring exporters and resource attributes.
+//
+// The function automatically merges provided configuration with defaults and sets up
+// appropriate OTLP exporters based on the environment configuration.
+//
+// Parameters:
+//   - ctx: The context for controlling logger initialization lifetime
+//   - config: The configuration containing logger setup options and attributes
+//
+// Returns:
+//   - context.Context: Updated context with logger provider
+//   - *sdk.LoggerProvider: Configured logger provider for emitting logs
+//   - error: Non-nil if initialization fails
+//
+// Example:
+//
+//        config := logs.OtelGoLogsConfig{
+//            Attributes: []attribute.KeyValue{
+//                semconv.ServiceNameKey.String("my-service"),
+//            },
+//        }
+//        ctx, provider, err := logs.Init(context.Background(), config)
+//        if err != nil {
+//            log.Fatal(err)
+//        }
+//        defer func() {
+//            if err := provider.Shutdown(ctx); err != nil {
+//                log.Printf("failed to shutdown provider: %v", err)
+//            }
+//        }()
+func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.LoggerProvider, error) <span class="cov8" title="1">{
+        localConfig := OtelGoLogsConfig{
+                Attributes: make([]attribute.KeyValue, len(defaultConfig.Attributes)),
+                TLS:        config.TLS,
+        }
+        copy(localConfig.Attributes, defaultConfig.Attributes)
+
+        if len(config.Attributes) &gt; 0 </span><span class="cov8" title="1">{
+                localConfig.Attributes = config.Attributes
+        }</span>
+
+        <span class="cov8" title="1">if localConfig.TLS == nil </span><span class="cov8" title="1">{
+                localConfig.TLS = internal.NewTLSConfig()
+        }</span>
+
+        <span class="cov8" title="1">if err := localConfig.TLS.Validate(); err != nil </span><span class="cov8" title="1">{
+                return ctx, nil, fmt.Errorf("invalid TLS configuration: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">tlsConfig, err := localConfig.TLS.BuildTLSConfig()
+        if err != nil </span><span class="cov8" title="1">{
+                return ctx, nil, fmt.Errorf("failed to build TLS config: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">res, err := resource.New(ctx,
+                resource.WithHost(),
+                resource.WithContainer(),
+                resource.WithProcess(),
+                resource.WithTelemetrySDK(),
+                resource.WithOS(),
+                resource.WithFromEnv(),
+                resource.WithAttributes(localConfig.Attributes...),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return ctx, nil, fmt.Errorf("failed to create resource: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">var exporter sdk.Exporter
+
+        if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL") </span><span class="cov0" title="0">{
+                grpcOpts := []grpc.DialOption{
+                        grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+                }
+
+                exporter, err = otlploggrpc.New(ctx, otlploggrpc.WithDialOption(grpcOpts...))
+                if err != nil </span><span class="cov0" title="0">{
+                        return ctx, nil, fmt.Errorf("failed to create gRPC log exporter: %w", err)
+                }</span>
+        } else<span class="cov8" title="1"> {
+                exporter, err = otlploghttp.New(ctx, otlploghttp.WithTLSClientConfig(tlsConfig))
+                if err != nil </span><span class="cov0" title="0">{
+                        return ctx, nil, fmt.Errorf("failed to create HTTP log exporter: %w", err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">processor := sdk.NewBatchProcessor(exporter)
+
+        logProvider := sdk.NewLoggerProvider(
+                sdk.WithResource(res),
+                sdk.WithProcessor(processor),
+        )
+
+        global.SetLoggerProvider(logProvider)
+
+        return ctx, logProvider, nil</span>
+}
+
+// Shutdown gracefully shuts down the logger provider and flushes any pending logs.
+// It should be called when the application is terminating to ensure all logs are exported.
+//
+// Parameters:
+//   - ctx: The context for controlling shutdown timeout
+//   - logProvider: The provider instance to shut down
+//
+// Returns:
+//   - error: Non-nil if shutdown fails
+//
+// Example:
+//
+//        ctx := context.Background()
+//        ctx, provider, err := logs.Init(ctx, logs.OtelGoLogsConfig{})
+//        if err != nil {
+//            log.Fatal(err)
+//        }
+//        defer logs.Shutdown(ctx, provider)
+func Shutdown(ctx context.Context, logProvider *sdk.LoggerProvider) error <span class="cov8" title="1">{
+        return logProvider.Shutdown(ctx)
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package metrics
+
+import (
+        "context"
+        "fmt"
+        "os"
+
+        "github.com/wasilak/otelgo/common"
+        "github.com/wasilak/otelgo/internal"
+        "go.opentelemetry.io/otel"
+        "go.opentelemetry.io/otel/attribute"
+        "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+        "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+        sdk "go.opentelemetry.io/otel/sdk/metric"
+        "go.opentelemetry.io/otel/sdk/resource"
+        semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+        "google.golang.org/grpc"
+        "google.golang.org/grpc/credentials"
+)
+
+// OtelGoMetricsConfig specifies the configuration for the OpenTelemetry metrics.
+type OtelGoMetricsConfig struct {
+        Attributes []attribute.KeyValue `json:"attributes"` // Attributes specifies the attributes to be added to the metric resource. Default is an empty slice.
+        TLS        *internal.TLSConfig
+}
+
+// defaultConfig specifies the default configuration for the OpenTelemetry metrics.
+var defaultConfig = OtelGoMetricsConfig{
+        Attributes: []attribute.KeyValue{
+                semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
+                semconv.ServiceVersionKey.String("v0.0.0"),
+        },
+}
+
+// Init initializes the OpenTelemetry metric provider with the specified configuration.
+// It sets up a federated metric pipeline by configuring exporters and resource attributes.
+//
+// The function automatically merges provided configuration with defaults and sets up
+// appropriate OTLP exporters based on the environment configuration.
+//
+// Parameters:
+//   - ctx: The context for controlling metric initialization lifetime
+//   - config: The configuration containing metric setup options and attributes
+//
+// Returns:
+//   - context.Context: Updated context with metric provider
+//   - *sdk.MeterProvider: Configured metric provider for emitting metrics
+//   - error: Non-nil if initialization fails
+//
+// Example:
+//
+//        config := metrics.OtelGoMetricsConfig{
+//            Attributes: []attribute.KeyValue{
+//                semconv.ServiceNameKey.String("my-service"),
+//            },
+//        }
+//        ctx, provider, err := metrics.Init(context.Background(), config)
+//        if err != nil {
+//            log.Fatal(err)
+//        }
+//        defer func() {
+//            if err := provider.Shutdown(ctx); err != nil {
+//                log.Printf("failed to shutdown provider: %v", err)
+//            }
+//        }()
+func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sdk.MeterProvider, error) <span class="cov8" title="1">{
+        localConfig := OtelGoMetricsConfig{
+                Attributes: make([]attribute.KeyValue, len(defaultConfig.Attributes)),
+                TLS:        config.TLS,
+        }
+        copy(localConfig.Attributes, defaultConfig.Attributes)
+
+        if len(config.Attributes) &gt; 0 </span><span class="cov8" title="1">{
+                localConfig.Attributes = config.Attributes
+        }</span>
+
+        <span class="cov8" title="1">if localConfig.TLS == nil </span><span class="cov8" title="1">{
+                localConfig.TLS = internal.NewTLSConfig()
+        }</span>
+
+        <span class="cov8" title="1">if err := localConfig.TLS.Validate(); err != nil </span><span class="cov8" title="1">{
+                return ctx, nil, fmt.Errorf("invalid TLS configuration: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">tlsConfig, err := localConfig.TLS.BuildTLSConfig()
+        if err != nil </span><span class="cov8" title="1">{
+                return ctx, nil, fmt.Errorf("failed to build TLS config: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">res, err := resource.New(ctx,
+                resource.WithHost(),
+                resource.WithContainer(),
+                resource.WithProcess(),
+                resource.WithTelemetrySDK(),
+                resource.WithOS(),
+                resource.WithFromEnv(),
+                resource.WithAttributes(localConfig.Attributes...),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return ctx, nil, fmt.Errorf("failed to create resource: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">var exporter sdk.Exporter
+
+        if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") </span><span class="cov0" title="0">{
+                grpcOpts := []grpc.DialOption{
+                        grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+                }
+
+                exporter, err = otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithDialOption(grpcOpts...))
+                if err != nil </span><span class="cov0" title="0">{
+                        return ctx, nil, fmt.Errorf("failed to create gRPC metrics exporter: %w", err)
+                }</span>
+        } else<span class="cov8" title="1"> {
+                exporter, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithTLSClientConfig(tlsConfig))
+                if err != nil </span><span class="cov0" title="0">{
+                        return ctx, nil, fmt.Errorf("failed to create HTTP metrics exporter: %w", err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">meterProvider := sdk.NewMeterProvider(
+                sdk.WithResource(res),
+                sdk.WithReader(sdk.NewPeriodicReader(exporter)),
+        )
+
+        otel.SetMeterProvider(meterProvider)
+
+        return ctx, meterProvider, nil</span>
+}
+
+// Shutdown gracefully shuts down the metric provider and flushes any pending metrics.
+// It should be called when the application is terminating to ensure all metrics are exported.
+//
+// Parameters:
+//   - ctx: The context for controlling shutdown timeout
+//   - meterProvider: The provider instance to shut down
+//
+// Returns:
+//   - error: Non-nil if shutdown fails
+//
+// Example:
+//
+//        ctx := context.Background()
+//        ctx, provider, err := metrics.Init(ctx, metrics.OtelGoMetricsConfig{})
+//        if err != nil {
+//            log.Fatal(err)
+//        }
+//        defer metrics.Shutdown(ctx, provider)
+func Shutdown(ctx context.Context, meterProvider *sdk.MeterProvider) error <span class="cov8" title="1">{
+        return meterProvider.Shutdown(ctx)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package slog
+
+import (
+        "context"
+        "fmt"
+
+        "log/slog"
+
+        "go.opentelemetry.io/otel/codes"
+        otellog "go.opentelemetry.io/otel/log"
+        sdktrace "go.opentelemetry.io/otel/sdk/trace"
+        "go.opentelemetry.io/otel/trace"
+)
+
+// TracingHandler wraps a slog.Handler to add OpenTelemetry tracing information to log records.
+// It enriches log entries with trace context, span details, and other OpenTelemetry attributes.
+type TracingHandler struct {
+        handler slog.Handler
+}
+
+const sevOffset = slog.Level(otellog.SeverityDebug) - slog.LevelDebug
+
+// NewTracingHandler creates a new TracingHandler that wraps the provided slog.Handler.
+// If the provided handler is already a TracingHandler, it returns the underlying handler
+// to avoid multiple layers of wrapping.
+//
+// Parameters:
+//   - h: The slog.Handler to wrap
+//
+// Returns:
+//   - *TracingHandler: A new handler that adds tracing information to log records
+func NewTracingHandler(h slog.Handler) *TracingHandler <span class="cov8" title="1">{
+        // avoid chains of handlers.
+        if lh, ok := h.(*TracingHandler); ok </span><span class="cov8" title="1">{
+                h = lh.Handler()
+        }</span>
+        <span class="cov8" title="1">return &amp;TracingHandler{h}</span>
+}
+
+// Handler returns the underlying slog.Handler wrapped by this TracingHandler.
+// This method is useful when you need to access or modify the base handler.
+//
+// Returns:
+//   - slog.Handler: The underlying handler
+func (h *TracingHandler) Handler() slog.Handler <span class="cov8" title="1">{
+        return h.handler
+}</span>
+
+// Enabled reports whether the handler handles records at the given level.
+// The check is delegated to the underlying handler.
+//
+// Parameters:
+//   - ctx: The context containing the current span
+//   - level: The log level to check
+//
+// Returns:
+//   - bool: true if the handler processes records at the given level
+func (h *TracingHandler) Enabled(ctx context.Context, level slog.Level) bool <span class="cov8" title="1">{
+        return h.handler.Enabled(ctx, level)
+}</span>
+
+// Handle processes the log record by adding OpenTelemetry trace context and span information.
+// If there is an active span, it adds trace ID, span ID, and other span attributes to the record.
+// For error level logs, it also sets the span status to error.
+//
+// Parameters:
+//   - ctx: The context containing the current span
+//   - r: The log record to process
+//
+// Returns:
+//   - error: Non-nil if handling the record fails
+func (h *TracingHandler) Handle(ctx context.Context, r slog.Record) error <span class="cov8" title="1">{
+        span := trace.SpanFromContext(ctx)
+
+        if span.IsRecording() </span><span class="cov8" title="1">{
+                if r.Level &gt;= slog.LevelError </span><span class="cov8" title="1">{
+                        span.SetStatus(codes.Error, r.Message)
+                }</span>
+
+                <span class="cov8" title="1">r = alignWithOTELSpecs(r, span)</span>
+        }
+
+        <span class="cov8" title="1">return h.handler.Handle(ctx, r)</span>
+}
+
+// WithAttrs returns a new TracingHandler whose handler includes the given attributes.
+//
+// Parameters:
+//   - attrs: The attributes to add to all records
+//
+// Returns:
+//   - slog.Handler: A new handler with the additional attributes
+func (h *TracingHandler) WithAttrs(attrs []slog.Attr) slog.Handler <span class="cov8" title="1">{
+        return NewTracingHandler(h.handler.WithAttrs(attrs))
+}</span>
+
+// WithGroup returns a new TracingHandler whose handler includes the given group.
+//
+// Parameters:
+//   - name: The name of the group
+//
+// Returns:
+//   - slog.Handler: A new handler with the additional group
+func (h *TracingHandler) WithGroup(name string) slog.Handler <span class="cov8" title="1">{
+        return NewTracingHandler(h.handler.WithGroup(name))
+}</span>
+
+// https://opentelemetry.io/docs/specs/otel/logs/data-model/#log-and-event-record-definition
+// Timestamp        Time when the event occurred.
+// ObservedTimestamp        Time when the event was observed.
+// TraceId        Request trace id.
+// SpanId        Request span id.
+// TraceFlags        W3C trace flag.
+// SeverityText        The severity text (also known as log level).
+// SeverityNumber        Numerical value of the severity.
+// Body        The body of the log record.
+// Resource        Describes the source of the log.
+// InstrumentationScope        Describes the scope that emitted the log.
+// Attributes        Additional information about the event.
+func alignWithOTELSpecs(r slog.Record, span trace.Span) slog.Record <span class="cov8" title="1">{
+        traceId := ""
+        spanId := ""
+        traceFlags := ""
+        if spanCtx := span.SpanContext(); spanCtx.HasTraceID() </span><span class="cov8" title="1">{
+                spanId = spanCtx.SpanID().String()
+                traceId = spanCtx.TraceID().String()
+                traceFlags = spanCtx.TraceFlags().String()
+        }</span>
+        <span class="cov8" title="1">r.AddAttrs(slog.String("TraceId", traceId))
+        r.AddAttrs(slog.String("SpanId", spanId))
+        r.AddAttrs(slog.String("TraceFlags", traceFlags))
+
+        // Convert the span to ReadOnlySpan to access attributes
+        roSpan, ok := span.(sdktrace.ReadOnlySpan)
+        if !ok </span><span class="cov8" title="1">{
+                fmt.Println("Span is not a ReadOnlySpan")
+        }</span> else<span class="cov0" title="0"> {
+                // Create a group for span attributes
+                attributes := make([]any, 0) // Use []any for slog.Group compatibility
+                for _, attr := range roSpan.Attributes() </span><span class="cov0" title="0">{
+                        attributes = append(attributes, slog.String(string(attr.Key), attr.Value.Emit()))
+                }</span>
+                <span class="cov0" title="0">r.AddAttrs(slog.Group("Attributes", attributes...))
+
+                // Add InstrumentationScope details as a group
+                scope := roSpan.InstrumentationScope()
+                scopeAttrs := make([]any, 0) // Use []any for slog.Group compatibility
+                iter := scope.Attributes.Iter()
+                for iter.Next() </span><span class="cov0" title="0">{
+                        attr := iter.Attribute()
+                        scopeAttrs = append(scopeAttrs, slog.String(string(attr.Key), attr.Value.Emit()))
+                }</span>
+                <span class="cov0" title="0">r.AddAttrs(slog.Group("InstrumentationScope",
+                        slog.String("Name", scope.Name),
+                        slog.String("Version", scope.Version),
+                        slog.Group("Attributes", scopeAttrs...),
+                ))
+
+                // Add other span details
+                r.AddAttrs(
+                        slog.String("SpanName", roSpan.Name()),
+                        slog.String("SpanKind", roSpan.SpanKind().String()),
+                        slog.String("Resource", roSpan.Resource().String()),
+                        slog.String("Timestamp", roSpan.StartTime().String()),
+                        slog.String("ObservedTimestamp", roSpan.StartTime().String()),
+                )</span>
+        }
+
+        <span class="cov8" title="1">sev := slog.Level(int(r.Level)) + sevOffset
+
+        // Add severity and message details
+        r.AddAttrs(
+                slog.String("SeverityText", r.Level.String()),
+                slog.Int("SeverityNumber", int(sev)),
+                slog.String("Body", r.Message),
+        )
+
+        return r</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package tracing
+
+import (
+        "context"
+        "fmt"
+        "log"
+        "time"
+
+        "github.com/wasilak/otelgo/common"
+        "github.com/wasilak/otelgo/internal"
+        "go.opentelemetry.io/contrib/instrumentation/host"
+        "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+        "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+        "go.opentelemetry.io/otel/sdk/metric"
+        "go.opentelemetry.io/otel/sdk/resource"
+        "google.golang.org/grpc"
+        "google.golang.org/grpc/credentials"
+)
+
+// setupHostMetrics configures and starts the host metrics collection with the specified settings.
+// It initializes a metric exporter based on the configured protocol (gRPC or HTTP) and sets up
+// periodic collection of host-level metrics.
+//
+// Parameters:
+//   - ctx: The context for controlling the metrics setup lifetime
+//   - res: The resource to associate with the metrics
+//   - interval: The duration between metric collections
+//
+// The function will panic if it fails to create the exporter or start the host metrics collection.
+// This is intentional as host metrics are critical for monitoring and the application should not
+// continue without them if they were explicitly enabled.
+func setupHostMetrics(ctx context.Context, res *resource.Resource, interval time.Duration) <span class="cov0" title="0">{
+        var err error
+        var exp metric.Exporter
+
+        // Use the same TLS configuration as other components
+        tlsConfigInternal := internal.NewTLSConfig()
+        if err := tlsConfigInternal.Validate(); err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("invalid TLS configuration for host metrics: %w", err))</span>
+        }
+
+        <span class="cov0" title="0">tlsConfig, err := tlsConfigInternal.BuildTLSConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("failed to build TLS config for host metrics: %w", err))</span>
+        }
+
+        <span class="cov0" title="0">if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") </span><span class="cov0" title="0">{
+                // Configure gRPC dial options to use the custom TLS configuration
+                grpcOpts := []grpc.DialOption{
+                        grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+                }
+
+                exp, err = otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithDialOption(grpcOpts...))
+        }</span> else<span class="cov0" title="0"> {
+                exp, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithTLSClientConfig(tlsConfig))
+        }</span>
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+
+        <span class="cov0" title="0">read := metric.NewPeriodicReader(exp, metric.WithInterval(interval))
+        provider := metric.NewMeterProvider(metric.WithResource(res), metric.WithReader(read))
+
+        err = host.Start(host.WithMeterProvider(provider))
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package tracing
+
+import (
+        "context"
+        "fmt"
+        "log"
+        "time"
+
+        "github.com/wasilak/otelgo/common"
+        "github.com/wasilak/otelgo/internal"
+        "go.opentelemetry.io/contrib/instrumentation/runtime"
+        "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+        "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+        "go.opentelemetry.io/otel/sdk/metric"
+        "go.opentelemetry.io/otel/sdk/resource"
+        "google.golang.org/grpc"
+        "google.golang.org/grpc/credentials"
+)
+
+// setupRuntimeMetrics configures and starts the runtime metrics collection with the specified settings.
+// It initializes a metric exporter based on the configured protocol (gRPC or HTTP) and sets up
+// periodic collection of Go runtime metrics (e.g., memory stats, goroutine count).
+//
+// Parameters:
+//   - ctx: The context for controlling the metrics setup lifetime
+//   - res: The resource to associate with the metrics
+//   - interval: The duration between metric collections
+//
+// The function will panic if it fails to create the exporter or start the runtime metrics collection.
+// This is intentional as runtime metrics are critical for monitoring and the application should not
+// continue without them if they were explicitly enabled.
+func setupRuntimeMetrics(ctx context.Context, res *resource.Resource, interval time.Duration) <span class="cov0" title="0">{
+        var err error
+        var exp metric.Exporter
+
+        // Use the same TLS configuration as other components
+        tlsConfigInternal := internal.NewTLSConfig()
+        if err := tlsConfigInternal.Validate(); err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("invalid TLS configuration for runtime metrics: %w", err))</span>
+        }
+
+        <span class="cov0" title="0">tlsConfig, err := tlsConfigInternal.BuildTLSConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("failed to build TLS config for runtime metrics: %w", err))</span>
+        }
+
+        <span class="cov0" title="0">if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") </span><span class="cov0" title="0">{
+                // Configure gRPC dial options to use the custom TLS configuration
+                grpcOpts := []grpc.DialOption{
+                        grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+                }
+
+                exp, err = otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithDialOption(grpcOpts...))
+        }</span> else<span class="cov0" title="0"> {
+                exp, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithTLSClientConfig(tlsConfig))
+        }</span>
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+
+        <span class="cov0" title="0">read := metric.NewPeriodicReader(exp, metric.WithInterval(interval))
+        provider := metric.NewMeterProvider(metric.WithResource(res), metric.WithReader(read))
+
+        err = runtime.Start(runtime.WithMeterProvider(provider))
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package tracing
+
+import (
+        "context"
+        "fmt"
+        "time"
+
+        "dario.cat/mergo"
+        "github.com/wasilak/otelgo/common"
+        "github.com/wasilak/otelgo/internal"
+        "go.opentelemetry.io/otel"
+        "go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+        "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+        "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+        "go.opentelemetry.io/otel/propagation"
+        "go.opentelemetry.io/otel/sdk/resource"
+        "go.opentelemetry.io/otel/sdk/trace"
+        "google.golang.org/grpc"
+        "google.golang.org/grpc/credentials"
+)
+
+// Sampler control
+// https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/#general-sdk-configuration
+// OTEL_TRACES_SAMPLER see: https://opentelemetry.io/docs/specs/otel/trace/sdk/#sampling
+
+// The Config type is used to configure whether host metrics are enabled or not.
+// @property {bool} HostMetricsEnabled - A boolean value that indicates whether host metrics are
+// enabled or not.
+type Config struct {
+        HostMetricsEnabled     bool              `json:"host_metrics_enabled"`     // HostMetricsEnabled specifies whether host metrics are enabled. Default is false.
+        HostMetricsInterval    time.Duration     `json:"host_metrics_interval"`    // HostMetricsInterval specifies the interval at which host metrics are collected. Default is 2 seconds.
+        RuntimeMetricsEnabled  bool              `json:"runtime_metrics_enabled"`  // RuntimeMetricsEnabled specifies whether runtime metrics are enabled. Default is false.
+        RuntimeMetricsInterval time.Duration     `json:"runtime_metrics_interval"` // RuntimeMetricsInterval specifies the interval at which runtime metrics are collected. Default is 2 seconds.
+        TLS                    *internal.TLSConfig // TLS specifies the TLS configuration for exporters. Default is nil.
+}
+
+// The defaultConfig variable is an instance of the Config struct that specifies the default configuration
+var defaultConfig = Config{
+        HostMetricsEnabled:     false,
+        RuntimeMetricsEnabled:  false,
+        HostMetricsInterval:    2 * time.Second,
+        RuntimeMetricsInterval: 2 * time.Second,
+}
+
+// Init initializes the OpenTelemetry tracer provider with the specified configuration.
+// It sets up a trace pipeline by configuring exporters and resource attributes.
+//
+// The function automatically merges provided configuration with defaults and sets up
+// appropriate OTLP exporters based on the environment configuration. It also configures
+// host and runtime metrics if enabled in the configuration.
+//
+// Parameters:
+//   - ctx: The context for controlling tracer initialization lifetime
+//   - config: The configuration containing tracer setup options and metrics settings
+//
+// Returns:
+//   - context.Context: Updated context with tracer provider
+//   - *trace.TracerProvider: Configured tracer provider for creating spans
+//   - error: Non-nil if initialization fails
+//
+// Example:
+//
+//        config := tracing.Config{
+//            HostMetricsEnabled: true,
+//            RuntimeMetricsEnabled: true,
+//            HostMetricsInterval: 5 * time.Second,
+//        }
+//        ctx, provider, err := tracing.Init(context.Background(), config)
+//        if err != nil {
+//            log.Fatal(err)
+//        }
+//        defer func() {
+//            if err := provider.Shutdown(ctx); err != nil {
+//                log.Printf("failed to shutdown provider: %v", err)
+//            }
+//        }()
+func Init(ctx context.Context, config Config) (context.Context, *trace.TracerProvider, error) <span class="cov8" title="1">{
+        localConfig := Config{
+                HostMetricsEnabled:     defaultConfig.HostMetricsEnabled,
+                HostMetricsInterval:    defaultConfig.HostMetricsInterval,
+                RuntimeMetricsEnabled:  defaultConfig.RuntimeMetricsEnabled,
+                RuntimeMetricsInterval: defaultConfig.RuntimeMetricsInterval,
+                TLS:                    config.TLS,
+        }
+
+        // The code `err := mergo.Merge(&amp;defaultConfig, config, mergo.WithOverride)` is using the `mergo`
+        // library to merge the `config` object into the `defaultConfig` object.
+        err := mergo.Merge(&amp;localConfig, config, mergo.WithOverride)
+        if err != nil </span><span class="cov0" title="0">{
+                return ctx, nil, err
+        }</span>
+
+        <span class="cov8" title="1">if localConfig.TLS == nil </span><span class="cov8" title="1">{
+                localConfig.TLS = internal.NewTLSConfig()
+        }</span>
+
+        <span class="cov8" title="1">if err := localConfig.TLS.Validate(); err != nil </span><span class="cov8" title="1">{
+                return ctx, nil, fmt.Errorf("invalid TLS configuration: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">tlsConfig, err := localConfig.TLS.BuildTLSConfig()
+        if err != nil </span><span class="cov8" title="1">{
+                return ctx, nil, fmt.Errorf("failed to build TLS config: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">var client otlptrace.Client
+
+        if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL") </span><span class="cov0" title="0">{
+                // Configure gRPC dial options to use the custom TLS configuration
+                grpcOpts := []grpc.DialOption{
+                        grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+                }
+
+                client = otlptracegrpc.NewClient(
+                        otlptracegrpc.WithDialOption(grpcOpts...),
+                )
+        }</span> else<span class="cov8" title="1"> {
+                client = otlptracehttp.NewClient(
+                        otlptracehttp.WithTLSClientConfig(tlsConfig),
+                )
+        }</span>
+
+        <span class="cov8" title="1">exporter, err := otlptrace.New(ctx, client)
+        if err != nil </span><span class="cov0" title="0">{
+                return ctx, nil, err
+        }</span>
+
+        // The code block is initializing a resource for OpenTelemetry tracing. The `resource.New()` function
+        // is called with a context and a series of options (`resource.WithHost()`,
+        // `resource.WithContainer()`, etc.) to configure the resource. These options specify the attributes
+        // of the resource, such as the host, container, process, telemetry SDK, operating system, and
+        // environment variables.
+        <span class="cov8" title="1">res, err := resource.New(ctx,
+                resource.WithHost(),
+                resource.WithContainer(),
+                resource.WithProcess(),
+                resource.WithTelemetrySDK(),
+                resource.WithOS(),
+                resource.WithFromEnv(),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return ctx, nil, err
+        }</span>
+
+        // The `if defaultConfig.HostMetricsEnabled` condition checks if the `HostMetricsEnabled` field in the
+        // `defaultConfig` variable is set to `true`. If it is `true`, it means that host metrics are enabled.
+        <span class="cov8" title="1">if defaultConfig.HostMetricsEnabled </span><span class="cov0" title="0">{
+                setupHostMetrics(ctx, res, defaultConfig.HostMetricsInterval)
+        }</span>
+
+        <span class="cov8" title="1">if defaultConfig.RuntimeMetricsEnabled </span><span class="cov0" title="0">{
+                setupRuntimeMetrics(ctx, res, defaultConfig.RuntimeMetricsInterval)
+        }</span>
+
+        // Create the trace provider
+        <span class="cov8" title="1">traceProvider := trace.NewTracerProvider(
+                trace.WithBatcher(exporter),
+                trace.WithResource(res),
+        )
+
+        // Set the global trace provider
+        otel.SetTracerProvider(traceProvider)
+
+        // Set the propagator
+        propagator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
+        otel.SetTextMapPropagator(propagator)
+
+        return ctx, traceProvider, nil</span>
+}
+
+// Shutdown gracefully shuts down the tracer provider and flushes any pending spans.
+// It should be called when the application is terminating to ensure all traces are exported.
+//
+// Parameters:
+//   - ctx: The context for controlling shutdown timeout
+//   - traceProvider: The provider instance to shut down
+//
+// Returns:
+//   - error: Non-nil if shutdown fails
+//
+// Example:
+//
+//        ctx := context.Background()
+//        ctx, provider, err := tracing.Init(ctx, tracing.Config{})
+//        if err != nil {
+//            log.Fatal(err)
+//        }
+//        defer tracing.Shutdown(ctx, provider)
+func Shutdown(ctx context.Context, traceProvider *trace.TracerProvider) error <span class="cov8" title="1">{
+        return traceProvider.Shutdown(ctx)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

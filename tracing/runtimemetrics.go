@@ -2,11 +2,12 @@ package tracing
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/wasilak/otelgo/common"
+	"github.com/wasilak/otelgo/internal"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
@@ -32,12 +33,18 @@ func setupRuntimeMetrics(ctx context.Context, res *resource.Resource, interval t
 	var err error
 	var exp metric.Exporter
 
-	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") {
-		// Create a custom TLS configuration
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, // WARNING: This skips certificate verification!
-		}
+	// Use the same TLS configuration as other components
+	tlsConfigInternal := internal.NewTLSConfig()
+	if err := tlsConfigInternal.Validate(); err != nil {
+		panic(fmt.Errorf("invalid TLS configuration for runtime metrics: %w", err))
+	}
 
+	tlsConfig, err := tlsConfigInternal.BuildTLSConfig()
+	if err != nil {
+		panic(fmt.Errorf("failed to build TLS config for runtime metrics: %w", err))
+	}
+
+	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") {
 		// Configure gRPC dial options to use the custom TLS configuration
 		grpcOpts := []grpc.DialOption{
 			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
@@ -45,10 +52,6 @@ func setupRuntimeMetrics(ctx context.Context, res *resource.Resource, interval t
 
 		exp, err = otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithDialOption(grpcOpts...))
 	} else {
-		// Create a custom TLS configuration
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, // WARNING: Skips certificate verification
-		}
 		exp, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithTLSClientConfig(tlsConfig))
 	}
 	if err != nil {

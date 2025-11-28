@@ -2,10 +2,11 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"os"
 
-	"dario.cat/mergo"
 	"github.com/wasilak/otelgo/common"
+	"github.com/wasilak/otelgo/internal"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -13,18 +14,21 @@ import (
 	sdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // OtelGoMetricsConfig specifies the configuration for the OpenTelemetry metrics.
 type OtelGoMetricsConfig struct {
 	Attributes []attribute.KeyValue `json:"attributes"` // Attributes specifies the attributes to be added to the metric resource. Default is an empty slice.
+	TLS        *internal.TLSConfig
 }
 
 // defaultConfig specifies the default configuration for the OpenTelemetry metrics.
 var defaultConfig = OtelGoMetricsConfig{
 	Attributes: []attribute.KeyValue{
 		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
-		semconv.ServiceVersionKey.String("v0.0.0"),
+		semconv.ServiceVersionKey.String("v1.0.0"),
 	},
 }
 
@@ -60,9 +64,27 @@ var defaultConfig = OtelGoMetricsConfig{
 //	    }
 //	}()
 func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sdk.MeterProvider, error) {
-	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
+	localConfig := OtelGoMetricsConfig{
+		Attributes: make([]attribute.KeyValue, len(defaultConfig.Attributes)),
+		TLS:        config.TLS,
+	}
+	copy(localConfig.Attributes, defaultConfig.Attributes)
+
+	if len(config.Attributes) > 0 {
+		localConfig.Attributes = config.Attributes
+	}
+
+	if localConfig.TLS == nil {
+		localConfig.TLS = internal.NewTLSConfig()
+	}
+
+	if err := localConfig.TLS.Validate(); err != nil {
+		return ctx, nil, fmt.Errorf("invalid TLS configuration: %w", err)
+	}
+
+	tlsConfig, err := localConfig.TLS.BuildTLSConfig()
 	if err != nil {
-		return ctx, nil, err
+		return ctx, nil, fmt.Errorf("failed to build TLS config: %w", err)
 	}
 
 	res, err := resource.New(ctx,
@@ -72,23 +94,27 @@ func Init(ctx context.Context, config OtelGoMetricsConfig) (context.Context, *sd
 		resource.WithTelemetrySDK(),
 		resource.WithOS(),
 		resource.WithFromEnv(),
-		resource.WithAttributes(defaultConfig.Attributes...),
+		resource.WithAttributes(localConfig.Attributes...),
 	)
 	if err != nil {
-		return ctx, nil, err
+		return ctx, nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	var exporter sdk.Exporter
 
 	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL") {
-		exporter, err = otlpmetricgrpc.New(ctx)
+		grpcOpts := []grpc.DialOption{
+			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		}
+
+		exporter, err = otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithDialOption(grpcOpts...))
 		if err != nil {
-			return ctx, nil, err
+			return ctx, nil, fmt.Errorf("failed to create gRPC metrics exporter: %w", err)
 		}
 	} else {
-		exporter, err = otlpmetrichttp.New(ctx)
+		exporter, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithTLSClientConfig(tlsConfig))
 		if err != nil {
-			return ctx, nil, err
+			return ctx, nil, fmt.Errorf("failed to create HTTP metrics exporter: %w", err)
 		}
 	}
 

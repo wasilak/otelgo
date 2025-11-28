@@ -22,11 +22,11 @@ package logs
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 	"os"
 
-	"dario.cat/mergo"
 	"github.com/wasilak/otelgo/common"
+	"github.com/wasilak/otelgo/internal"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
@@ -41,13 +41,14 @@ import (
 // OtelGoLogsConfig specifies the configuration for the OpenTelemetry logs.
 type OtelGoLogsConfig struct {
 	Attributes []attribute.KeyValue `json:"attributes"` // Attributes specifies the attributes to be added to the logger resource. Default is an empty slice.
+	TLS        *internal.TLSConfig
 }
 
 // defaultConfig specifies the default configuration for the OpenTelemetry logs.
 var defaultConfig = OtelGoLogsConfig{
 	Attributes: []attribute.KeyValue{
 		semconv.ServiceNameKey.String(os.Getenv("OTEL_SERVICE_NAME")),
-		semconv.ServiceVersionKey.String("v0.0.0"),
+		semconv.ServiceVersionKey.String("v1.0.0"),
 	},
 }
 
@@ -83,9 +84,27 @@ var defaultConfig = OtelGoLogsConfig{
 //	    }
 //	}()
 func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.LoggerProvider, error) {
-	err := mergo.Merge(&defaultConfig, config, mergo.WithOverride)
+	localConfig := OtelGoLogsConfig{
+		Attributes: make([]attribute.KeyValue, len(defaultConfig.Attributes)),
+		TLS:        config.TLS,
+	}
+	copy(localConfig.Attributes, defaultConfig.Attributes)
+
+	if len(config.Attributes) > 0 {
+		localConfig.Attributes = config.Attributes
+	}
+
+	if localConfig.TLS == nil {
+		localConfig.TLS = internal.NewTLSConfig()
+	}
+
+	if err := localConfig.TLS.Validate(); err != nil {
+		return ctx, nil, fmt.Errorf("invalid TLS configuration: %w", err)
+	}
+
+	tlsConfig, err := localConfig.TLS.BuildTLSConfig()
 	if err != nil {
-		return ctx, nil, err
+		return ctx, nil, fmt.Errorf("failed to build TLS config: %w", err)
 	}
 
 	res, err := resource.New(ctx,
@@ -95,36 +114,27 @@ func Init(ctx context.Context, config OtelGoLogsConfig) (context.Context, *sdk.L
 		resource.WithTelemetrySDK(),
 		resource.WithOS(),
 		resource.WithFromEnv(),
-		resource.WithAttributes(defaultConfig.Attributes...),
+		resource.WithAttributes(localConfig.Attributes...),
 	)
 	if err != nil {
-		return ctx, nil, err
+		return ctx, nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	var exporter sdk.Exporter
 
-	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL") { // Create a custom TLS configuration
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, // WARNING: This skips certificate verification!
-		}
-
-		// Configure gRPC dial options to use the custom TLS configuration
+	if common.IsOtlpProtocolGrpc("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL") {
 		grpcOpts := []grpc.DialOption{
 			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
 		}
 
 		exporter, err = otlploggrpc.New(ctx, otlploggrpc.WithDialOption(grpcOpts...))
 		if err != nil {
-			return ctx, nil, err
+			return ctx, nil, fmt.Errorf("failed to create gRPC log exporter: %w", err)
 		}
 	} else {
-		// Create a custom TLS configuration
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, // WARNING: Skips certificate verification
-		}
 		exporter, err = otlploghttp.New(ctx, otlploghttp.WithTLSClientConfig(tlsConfig))
 		if err != nil {
-			return ctx, nil, err
+			return ctx, nil, fmt.Errorf("failed to create HTTP log exporter: %w", err)
 		}
 	}
 
